@@ -1,0 +1,31 @@
+{
+    "server": {
+        "host": "localhost",
+        "port": 80,
+        "timeout": 5
+    },
+    "monitoring": {
+        "check_interval": 30,
+        "retry_attempts": 3,
+        "retry_delay": 10
+    },
+    "whatsapp": {
+        "method": "callmebot",
+        "api_key": "YOUR_API_KEY_HERE",
+        "phone_number": "YOUR_PHONE_NUMBER_HERE",
+        "account_sid": "",
+        "auth_token": ""
+    },
+    "logging": {
+        "level": "INFO",
+        "file": "server_monitor.log",
+        "max_size": "10MB",
+        "backup_count": 5
+    },
+    "notifications": {
+        "send_on_downtime": true,
+        "send_on_recovery": true,
+        "cooldown_period": 300
+    }
+}
+
