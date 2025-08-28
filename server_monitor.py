@@ -1,235 +1,133 @@
 #!/usr/bin/env python3
 """
-Server Monitor - Monitors server on port 80 and sends WhatsApp notifications
-when the server goes down.
-
+Server Monitor - Monitors multiple services (by URL) and sends WhatsApp notifications
+when a service goes down or recovers.
 Author: AI Assistant
-Date: 2024
+Date: 2025
 """
-
-import socket
 import time
-import logging
 import json
-from datetime import datetime
-from typing import Optional, Dict, Any
+import logging
 import requests
-from pathlib import Path
-
-# Import our custom modules
-from whatsapp_notifier import WhatsAppNotifier
-from config_manager import ConfigManager
-
-
-class ServerMonitor:
-    """
-    Main server monitoring class that checks server availability
-    and sends notifications when issues are detected.
-    """
-    
-    def __init__(self, config_path: str = "config.json"):
-        """
-        Initialize the server monitor.
-        
-        Args:
-            config_path (str): Path to configuration file
-        """
-        self.config_manager = ConfigManager(config_path)
-        self.config = self.config_manager.load_config()
-        self.whatsapp = WhatsAppNotifier(self.config)
-        
-        # Setup logging
-        self._setup_logging()
-        
-        # Monitoring state
-        self.last_status = True  # True = up, False = down
-        self.downtime_start = None
-        self.notification_sent = False
-        
-        self.logger.info("Server Monitor initialized successfully")
-    
-    def _setup_logging(self):
-        """Setup logging configuration."""
-        log_level = getattr(logging, self.config.get('logging', {}).get('level', 'INFO').upper())
-        
-        logging.basicConfig(
-            level=log_level,
-            format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-            handlers=[
-                logging.FileHandler('server_monitor.log'),
-                logging.StreamHandler()
-            ]
-        )
-        self.logger = logging.getLogger(__name__)
-    
-    def check_server_status(self) -> bool:
-        """
-        Check if the server is responding on the specified port.
-        
-        Returns:
-            bool: True if server is up, False if down
-        """
-        server_config = self.config['server']
-        host = server_config['host']
-        port = server_config['port']
-        timeout = server_config.get('timeout', 5)
-        
+import socket
+import os
+from datetime import datetime
+from logging.handlers import RotatingFileHandler
+from twilio.rest import Client
+try:
+    from dotenv import load_dotenv
+    load_dotenv()
+except Exception:
+    pass
+# ================== Load Config ==================
+with open("config.json", "r") as f:
+    config = json.load(f)
+services = config["services"]
+monitoring = config["monitoring"]
+whatsapp_cfg = config["whatsapp"]
+# Override sensitive WhatsApp/Twilio values from environment variables if present
+whatsapp_cfg["account_sid"] = os.getenv("TWILIO_ACCOUNT_SID", whatsapp_cfg.get("account_sid", ""))
+whatsapp_cfg["auth_token"] = os.getenv("TWILIO_AUTH_TOKEN", whatsapp_cfg.get("auth_token", ""))
+whatsapp_cfg["from_number"] = os.getenv("WHATSAPP_FROM_NUMBER", whatsapp_cfg.get("from_number", ""))
+# Support comma-separated list for recipients
+env_to_numbers = os.getenv("WHATSAPP_TO_NUMBERS")
+if env_to_numbers:
+    whatsapp_cfg["to_numbers"] = [n.strip() for n in env_to_numbers.split(",") if n.strip()]
+logging_cfg = config["logging"]
+notifications_cfg = config["notifications"]
+# ================== Logging Setup ==================
+handler = RotatingFileHandler(
+    logging_cfg["file"],
+    maxBytes=int(logging_cfg["max_size"].replace("MB", "")) * 1024 * 1024,
+    backupCount=logging_cfg["backup_count"]
+)
+logging.basicConfig(
+    level=getattr(logging, logging_cfg["level"]),
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    handlers=[handler, logging.StreamHandler()]
+)
+logger = logging.getLogger()
+# ================== Twilio Client ==================
+client = Client(whatsapp_cfg["account_sid"], whatsapp_cfg["auth_token"])
+def send_whatsapp(message):
+    """Send WhatsApp message to all numbers"""
+    for number in whatsapp_cfg["to_numbers"]:
         try:
-            # Create socket connection
-            sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            sock.settimeout(timeout)
-            
-            # Attempt to connect
-            result = sock.connect_ex((host, port))
-            sock.close()
-            
-            return result == 0
-            
+            client.messages.create(
+                from_=whatsapp_cfg["from_number"],
+                body=message,
+                to=number
+            )
+            logger.info(f"📩 WhatsApp sent to {number}: {message}")
         except Exception as e:
-            self.logger.error(f"Error checking server status: {e}")
-            return False
-    
-    def send_downtime_notification(self):
-        """Send WhatsApp notification about server downtime."""
-        if self.notification_sent:
-            return
-        
-        try:
-            server_config = self.config['server']
-            downtime_duration = self._calculate_downtime_duration()
-            
-            message = self._format_downtime_message(downtime_duration)
-            
-            # Send WhatsApp notification
-            success = self.whatsapp.send_message(message)
-            
-            if success:
-                self.notification_sent = True
-                self.logger.info("Downtime notification sent successfully")
-            else:
-                self.logger.error("Failed to send downtime notification")
-                
-        except Exception as e:
-            self.logger.error(f"Error sending downtime notification: {e}")
-    
-    def send_recovery_notification(self):
-        """Send WhatsApp notification about server recovery."""
-        try:
-            downtime_duration = self._calculate_downtime_duration()
-            message = self._format_recovery_message(downtime_duration)
-            
-            # Send WhatsApp notification
-            success = self.whatsapp.send_message(message)
-            
-            if success:
-                self.logger.info("Recovery notification sent successfully")
-            else:
-                self.logger.error("Failed to send recovery notification")
-                
-        except Exception as e:
-            self.logger.error(f"Error sending recovery notification: {e}")
-    
-    def _calculate_downtime_duration(self) -> str:
-        """Calculate the duration of downtime."""
-        if not self.downtime_start:
-            return "Unknown"
-        
-        duration = datetime.now() - self.downtime_start
-        hours = int(duration.total_seconds() // 3600)
-        minutes = int((duration.total_seconds() % 3600) // 60)
-        seconds = int(duration.total_seconds() % 60)
-        
-        if hours > 0:
-            return f"{hours}h {minutes}m {seconds}s"
-        elif minutes > 0:
-            return f"{minutes}m {seconds}s"
+            logger.error(f"❌ Failed to send WhatsApp to {number}: {e}")
+# ================== Service Checker ==================
+def get_server_ip(url):
+    """Get server IP from URL"""
+    hostname = url.split("//")[-1].split("/")[0].split(":")[0]
+    try:
+        return socket.gethostbyname(hostname)
+    except Exception as e:
+        logger.error(f"Failed to get IP for {hostname}: {e}")
+        return "Unknown"
+def check_service(service):
+    """Check a service and return status info"""
+    status_info = {
+        "name": service["name"],
+        "url": service["url"],
+        "server_ip": get_server_ip(service["url"]),
+        "status_code": None,
+        "message": ""
+    }
+   
+    try:
+        response = requests.get(service["url"], timeout=service.get("timeout", 5))
+        status_info["status_code"] = response.status_code
+        if 200 <= response.status_code < 300:
+            status_info["message"] = f"✅ {service['name']} is UP (Status {response.status_code})"
+            return True, status_info
         else:
-            return f"{seconds}s"
-    
-    def _format_downtime_message(self, duration: str) -> str:
-        """Format the downtime notification message."""
-        server_config = self.config['server']
-        host = server_config['host']
-        port = server_config['port']
-        
-        return (
-            f"🚨 SERVER DOWN ALERT 🚨\n\n"
-            f"Server: {host}:{port}\n"
-            f"Status: DOWN\n"
-            f"Downtime Duration: {duration}\n"
-            f"Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-            f"Please check the server immediately!"
-        )
-    
-    def _format_recovery_message(self, duration: str) -> str:
-        """Format the recovery notification message."""
-        server_config = self.config['server']
-        host = server_config['host']
-        port = server_config['port']
-        
-        return (
-            f"✅ SERVER RECOVERED ✅\n\n"
-            f"Server: {host}:{port}\n"
-            f"Status: UP\n"
-            f"Total Downtime: {duration}\n"
-            f"Recovery Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n"
-            f"Server is now operational."
-        )
-    
-    def run_monitoring_loop(self):
-        """Main monitoring loop."""
-        self.logger.info("Starting server monitoring...")
-        
-        check_interval = self.config.get('monitoring', {}).get('check_interval', 30)
-        
-        try:
-            while True:
-                current_status = self.check_server_status()
-                
-                # Log current status
-                status_text = "UP" if current_status else "DOWN"
-                self.logger.info(f"Server status: {status_text}")
-                
-                # Handle status changes
-                if current_status != self.last_status:
-                    if not current_status:  # Server went down
-                        self.downtime_start = datetime.now()
-                        self.notification_sent = False
-                        self.logger.warning("Server is DOWN!")
-                        self.send_downtime_notification()
-                    else:  # Server came back up
-                        self.logger.info("Server is UP!")
-                        self.send_recovery_notification()
-                        self.downtime_start = None
-                        self.notification_sent = False
-                
-                self.last_status = current_status
-                
-                # Wait before next check
-                time.sleep(check_interval)
-                
-        except KeyboardInterrupt:
-            self.logger.info("Monitoring stopped by user")
-        except Exception as e:
-            self.logger.error(f"Unexpected error in monitoring loop: {e}")
-
-
-def main():
-    """Main entry point."""
+            status_info["message"] = f"❌ {service['name']} is DOWN (Status {response.status_code})"
+            return False, status_info
+    except Exception as e:
+        status_info["message"] = f"❌ {service['name']} check failed: {e}"
+        return False, status_info
+# ================== Main Monitor Loop ==================
+def monitor_services():
+    status = {srv["name"]: True for srv in services} # assume healthy initially
+    last_alert_time = {srv["name"]: 0 for srv in services}
+    logger.info("🚀 Starting Server Monitor...")
     print("🚀 Starting Server Monitor...")
     print("Press Ctrl+C to stop monitoring")
     print("-" * 50)
-    
-    try:
-        monitor = ServerMonitor()
-        monitor.run_monitoring_loop()
-    except Exception as e:
-        print(f"Error starting server monitor: {e}")
-        return 1
-    
-    return 0
-
-
+    # 🔹 Send startup WhatsApp notification
+    send_whatsapp(f"🚀 Server Monitor started at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    while True:
+        for service in services:
+            name = service["name"]
+            is_up, info = check_service(service)
+            msg = (
+                f"{info['message']}\n"
+                f"🌐 Domain: {info['url']}\n"
+                f"🖥️ Server IP: {info['server_ip']}\n"
+                f"⏰ Checked at: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            )
+            if is_up and not status[name]:
+                # Recovery
+                status[name] = True
+                if notifications_cfg["send_on_recovery"]:
+                    send_whatsapp(msg)
+            elif not is_up and status[name]:
+                # Downtime
+                status[name] = False
+                now = time.time()
+                if notifications_cfg["send_on_downtime"] and (now - last_alert_time[name]) > notifications_cfg["cooldown_period"]:
+                    send_whatsapp(msg)
+                    last_alert_time[name] = now
+        time.sleep(monitoring["check_interval"])
 if __name__ == "__main__":
-    exit(main())
-
+    try:
+        monitor_services()
+    except KeyboardInterrupt:
+        logger.info("🛑 Server Monitor stopped by user")
+        print("\n🛑 Server Monitor stopped by user")
