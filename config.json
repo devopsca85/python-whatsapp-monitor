@@ -1,0 +1,23 @@
+{
+  "monitoring": {
+    "check_interval": 60,
+    "timeout": 5
+  },
+  "whatsapp": {
+    "account_sid": "",
+    "auth_token": "",
+    "from_number": "",
+    "to_numbers": []
+  },
+  "logging": {
+    "file": "monitor.log",
+    "level": "INFO",
+    "max_size": "10MB",
+    "backup_count": 5
+  },
+  "notifications": {
+    "send_on_downtime": true,
+    "send_on_recovery": true,
+    "cooldown_period": 300
+  }
+}
