@@ -1,8 +1,62 @@
+
+
 {
   "monitoring": {
-    "check_interval": 60,
+    "check_interval": 10,
     "timeout": 5
   },
+  "system_monitoring": {
+    "enabled": true,
+    "check_interval": 20,
+    "thresholds": {
+      "cpu_percent": 30,
+      "memory_percent": 30,
+      "disk_percent": 30
+    }
+  },
+  "database_monitoring": {
+    "check_interval": 10,
+    "timeout": 10,
+    "enabled": true,
+    "check_services": true,
+    "send_alerts_always": true,
+    "databases": {
+      "mysql": {
+        "enabled": true,
+        "check_service_status": true,
+        "check_databases": true,
+        "check_tables": true,
+        "check_corruption": true
+      },
+      "postgresql": {
+        "enabled": true,
+        "check_service_status": true,
+        "check_databases": true,
+        "check_tables": true
+      },
+      "mongodb": {
+        "enabled": false,
+        "check_service_status": false,
+        "check_databases": false,
+        "check_collections": false
+      }
+    }
+  },
+  "website_monitoring": {
+    "check_interval": 300,
+    "timeout": 5,
+    "enabled": true
+  },
+  "custom_endpoints": [
+    {
+      "url": "https://apicallfloor.customerdemourl.com/api",
+      "name": "API Call Floor"
+    },
+    {
+      "url": "https://aicallfloorapi.customerdemourl.com/",
+      "name": "AI Call Floor API"
+    }
+  ],
   "whatsapp": {
     "account_sid": "",
     "auth_token": "",
@@ -19,5 +73,30 @@
     "send_on_downtime": true,
     "send_on_recovery": true,
     "cooldown_period": 300
+  },
+  "databases": {
+    "enabled": ["mysql", "postgresql", "mongodb"],
+    "mysql": {
+      "host": "192.168.1.219",
+      "port": 3306,
+      "user": "root",
+      "password": "Balli@123",
+      "corruption_detection": true
+    },
+    "postgresql": {
+      "host": "192.168.1.219",
+      "port": 5432,
+      "user": "postgres",
+      "password": "",
+      "corruption_detection": true
+    },
+    "mongodb": {
+      "host": "192.168.1.219",
+      "port": 27017,
+      "user": "root",
+      "password": "123",
+      "corruption_detection": true
+    }
   }
 }
+
