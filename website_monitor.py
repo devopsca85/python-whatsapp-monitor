@@ -23,8 +23,8 @@ from config_helper import get_config, WEBSITE_MONITORING, CUSTOM_ENDPOINTS
 
 config = get_config()
 web_monitoring = WEBSITE_MONITORING
-whatsapp_cfg = config["whatsapp"]
-logging_cfg = config["logging"]
+whatsapp_cfg = config.get("whatsapp", {})
+logging_cfg = config.get("logging", {"level": "INFO"})
 
 # Override WhatsApp/Twilio values from .env
 whatsapp_cfg["account_sid"] = os.getenv("TWILIO_ACCOUNT_SID", whatsapp_cfg.get("account_sid", ""))

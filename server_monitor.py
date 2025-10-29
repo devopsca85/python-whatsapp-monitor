@@ -91,14 +91,11 @@ def check_server_health_via_api(ip):
     try:
         api_token, api_endpoint = get_server_api_credentials(ip)
         if not api_token:
-            print(f"   No API token for {ip}")
             return False
         headers = {"Authorization": f"Bearer {api_token}"}
         resp = requests.get(f"{api_endpoint}/health", headers=headers, timeout=5)
-        print(f"   Health check response: {resp.status_code}")
         return resp.status_code == 200
-    except Exception as e:
-        print(f"   Health check error: {e}")
+    except:
         return False
 
 def check_mysql_databases(ip):
@@ -175,23 +172,17 @@ def monitor_services():
     
     for ip in SERVERS:
         ip = ip.strip()
-        print(f"   Checking server: {ip}")
-        if not ip:
-            print(f"   Skipping empty IP")
+        if not ip or not check_server_health_via_api(ip):
             continue
-        if not check_server_health_via_api(ip):
-            print(f"   Server {ip} health check failed")
-            continue
-        print(f"   ✅ Server {ip} is healthy")
         
         # Initialize server state
         if ip not in previous_db_status:
             previous_db_status[ip] = {"mysql": {"dbs": {}, "tables": {}}, "postgresql": {"dbs": {}, "tables": {}}}
 
-        # Websites (temporarily disabled to avoid timeouts)
-        # folders = get_website_folders_via_api(ip)
-        # for folder in folders:
-        #     services.append({"name": f"{folder} on {ip}", "url": f"https://{folder}", "timeout": monitoring.get("timeout", 5)})
+        # Websites
+        folders = get_website_folders_via_api(ip)
+        for folder in folders:
+            services.append({"name": f"{folder} on {ip}", "url": f"https://{folder}", "timeout": monitoring.get("timeout", 5)})
         
         # MySQL Databases
         mysql_status = check_mysql_databases(ip)
@@ -266,11 +257,8 @@ def monitor_services():
 if __name__ == "__main__":
     try:
         print("🚀 Starting Secure Multi-Server Monitor (Web + MySQL + PostgreSQL)...")
-        print(f"   Monitoring servers: {SERVERS}")
-        print(f"   Check interval: {monitoring.get('check_interval', 300)} seconds")
         # Run one check immediately
         monitor_services()
-        print("✅ First check complete, starting monitoring loop...")
         # Schedule monitoring loop
         schedule.every(monitoring.get("check_interval", 300)).seconds.do(monitor_services)
         while True:

@@ -30,6 +30,7 @@ logger = logging.getLogger()
 
 whatsapp_notifier = WhatsAppNotifier(config)
 previous_db_status = {}
+first_run = True
 
 def send_whatsapp(message):
     try:
@@ -102,7 +103,7 @@ def check_mongodb_collections(ip):
 
 
 def monitor_databases():
-    global previous_db_status
+    global previous_db_status, first_run
     logger.info("🗄️  Checking databases...")
     
     for ip in SERVERS:
@@ -120,29 +121,88 @@ def monitor_databases():
             }
 
         # MySQL Databases
-        for db, status in check_mysql_dbs(ip).items():
+        current_mysql_dbs = set()
+        mysql_dbs_data = check_mysql_dbs(ip)
+        
+        for db, status in mysql_dbs_data.items():
+            current_mysql_dbs.add(db)
             prev = previous_db_status[ip]["mysql"]["dbs"].get(db)
-            if prev != status:
-                msg = f"{'✅ MySQL DB UP' if status == 'up' else '🚨 MySQL DB DOWN'} 🚨\nServer: {ip}\nDatabase: {db}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+            
+            if prev is None:
+                # Check if this database was previously deleted (recovery scenario)
+                deleted_key = f"mysql.{db}"
+                if deleted_key in previous_db_status[ip]["deleted_dbs"]:
+                    msg = f"✅ MySQL DB RECOVERED ✅\nServer: {ip}\nDatabase: {db}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                    send_whatsapp(msg)
+                    logger.info(f"   MySQL database recovered: {db}")
+                    previous_db_status[ip]["deleted_dbs"].discard(deleted_key)
+                previous_db_status[ip]["mysql"]["dbs"][db] = status
+            elif prev != status:
+                if status == "up":
+                    msg = f"✅ MySQL DB RECOVERED ✅\nServer: {ip}\nDatabase: {db}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                else:
+                    msg = f"🚨 MySQL DB CRASHED 🚨\nServer: {ip}\nDatabase: {db}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 send_whatsapp(msg)
-            previous_db_status[ip]["mysql"]["dbs"][db] = status
+                previous_db_status[ip]["mysql"]["dbs"][db] = status
+
+        # Detect deleted MySQL databases (skip on first run)
+        previous_mysql_dbs = set(previous_db_status[ip]["mysql"]["dbs"].keys())
+        deleted_mysql_dbs = previous_mysql_dbs - current_mysql_dbs
+        
+        if previous_mysql_dbs and not first_run:
+            for db in deleted_mysql_dbs:
+                msg = f"🚨 MySQL DATABASE DELETED 🚨\nServer: {ip}\nDatabase: {db}\n⚠️ DATABASE HAS BEEN DROPPED ⚠️\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                send_whatsapp(msg)
+                logger.warning(f"   MySQL database deleted: {db}")
+                previous_db_status[ip]["deleted_dbs"].add(f"mysql.{db}")
+                del previous_db_status[ip]["mysql"]["dbs"][db]
 
         # MySQL Tables
-        for db, tables in check_mysql_tables(ip).items():
+        mysql_tables_data = check_mysql_tables(ip)
+        
+        for db, tables in mysql_tables_data.items():
+            if f"mysql.{db}" in previous_db_status[ip]["deleted_dbs"]:
+                continue
+                
+            current_tables = set(tables.keys())
+            previous_tables = set(previous_db_status[ip]["mysql"]["tables"].keys())
+            previous_tables_in_db = {t.split(".", 1)[1] for t in previous_tables if t.startswith(f"{db}.")}
+            
             for table, status in tables.items():
                 key = f"{db}.{table}"
                 prev = previous_db_status[ip]["mysql"]["tables"].get(key)
-                if prev != status:
+                
+                if prev is None:
+                    # Check if this table was previously deleted (recovery scenario)
+                    deleted_key = f"mysql.{db}.{table}"
+                    if deleted_key in previous_db_status[ip]["deleted_dbs"]:
+                        msg = f"✅ MySQL Table RECOVERED ✅\nServer: {ip}\nDB: {db}\nTable: {table}\nStatus: HEALTHY\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                        send_whatsapp(msg)
+                        logger.info(f"   MySQL table recovered: {key}")
+                        previous_db_status[ip]["deleted_dbs"].discard(deleted_key)
+                    previous_db_status[ip]["mysql"]["tables"][key] = status
+                elif prev != status:
                     if status == "ok":
-                        msg = f"✅ MySQL Table OK ✅\nServer: {ip}\nDB: {db}\nTable: {table}"
+                        msg = f"✅ MySQL Table RECOVERED ✅\nServer: {ip}\nDB: {db}\nTable: {table}\nStatus: HEALTHY\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                     elif status == "corrupted":
-                        msg = f"🚨 MySQL Table CORRUPTED 🚨\nServer: {ip}\nDB: {db}\nTable: {table}\n⚠️ IMMEDIATE ACTION REQUIRED ⚠️"
+                        msg = f"🚨 MySQL Table CORRUPTED 🚨\nServer: {ip}\nDB: {db}\nTable: {table}\n⚠️ IMMEDIATE ACTION REQUIRED ⚠️\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                     elif status == "missing":
-                        msg = f"🚨 MySQL Table MISSING 🚨\nServer: {ip}\nDB: {db}\nTable: {table}"
+                        msg = f"🚨 MySQL Table MISSING 🚨\nServer: {ip}\nDB: {db}\nTable: {table}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                     else:
-                        msg = f"🚨 MySQL Table ERROR 🚨\nServer: {ip}\nDB: {db}\nTable: {table}"
-                    send_whatsapp(msg + f"\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-                previous_db_status[ip]["mysql"]["tables"][key] = status
+                        msg = f"🚨 MySQL Table ERROR 🚨\nServer: {ip}\nDB: {db}\nTable: {table}\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                    send_whatsapp(msg)
+                    previous_db_status[ip]["mysql"]["tables"][key] = status
+            
+            deleted_tables = previous_tables_in_db - current_tables
+            if previous_tables_in_db:
+                for table in deleted_tables:
+                    key = f"{db}.{table}"
+                    if key in previous_db_status[ip]["mysql"]["tables"]:
+                        msg = f"🚨 MySQL TABLE DELETED 🚨\nServer: {ip}\nDB: {db}\nTable: {table}\n⚠️ TABLE HAS BEEN DROPPED ⚠️\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
+                        send_whatsapp(msg)
+                        logger.warning(f"   MySQL table deleted: {key}")
+                        previous_db_status[ip]["deleted_dbs"].add(f"mysql.{db}.{table}")
+                        del previous_db_status[ip]["mysql"]["tables"][key]
 
         # PostgreSQL Service Status (Docker container)
         services_status = check_database_services(ip)
@@ -185,11 +245,11 @@ def monitor_databases():
                 send_whatsapp(msg)
                 previous_db_status[ip]["postgresql"]["dbs"][db] = status
 
-        # Detect deleted PostgreSQL databases
+        # Detect deleted PostgreSQL databases (skip on first run)
         previous_pg_dbs = set(previous_db_status[ip]["postgresql"]["dbs"].keys())
         deleted_pg_dbs = previous_pg_dbs - current_pg_dbs
         
-        if previous_pg_dbs:
+        if previous_pg_dbs and not first_run:
             for db in deleted_pg_dbs:
                 msg = f"🚨 PostgreSQL DATABASE DELETED 🚨\nServer: {ip}\nDatabase: {db} (Docker)\n⚠️ DATABASE HAS BEEN DROPPED ⚠️\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 send_whatsapp(msg)
@@ -280,11 +340,11 @@ def monitor_databases():
                 send_whatsapp(msg)
                 previous_db_status[ip]["mongodb"]["dbs"][db] = status
 
-        # Detect deleted MongoDB databases
+        # Detect deleted MongoDB databases (skip on first run)
         previous_mongo_dbs = set(previous_db_status[ip]["mongodb"]["dbs"].keys())
         deleted_mongo_dbs = previous_mongo_dbs - current_mongo_dbs
         
-        if previous_mongo_dbs:
+        if previous_mongo_dbs and not first_run:
             for db in deleted_mongo_dbs:
                 msg = f"🚨 MongoDB DATABASE DELETED 🚨\nServer: {ip}\nDatabase: {db} (Docker)\n⚠️ DATABASE HAS BEEN DROPPED ⚠️\nTime: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}"
                 send_whatsapp(msg)
@@ -334,6 +394,9 @@ def monitor_databases():
                         logger.warning(f"   MongoDB collection deleted: {key}")
                         previous_db_status[ip]["deleted_dbs"].add(f"mongodb.{db}.{collection}")
                         del previous_db_status[ip]["mongodb"]["collections"][key]
+    
+    # Mark first run as completed
+    first_run = False
 
 if __name__ == "__main__":
     try:
