@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "username": "admin",
+      "password": "$2b$10$rGxH9vZj0YE8r5Y5kXJ6/.WGnhK5z.yxqZXJ5cXJQ5YXJ5YXJ5YXJ",
+      "role": "admin",
+      "email": "admin@orion.local",
+      "createdAt": "2025-10-27T00:00:00.000Z",
+      "assignedServers": [],
+      "lastLogin": "2025-10-30T09:35:10.198Z"
+    },
+    {
+      "id": "2",
+      "username": "user",
+      "password": "$2b$10$uGxH9vZj0YE8r5Y5kXJ6/.WGnhK5z.yxqZXJ5cXJQ5YXJ5YXJ5YXJ",
+      "role": "user",
+      "email": "user@orion.local",
+      "createdAt": "2025-10-27T00:00:00.000Z",
+      "assignedServers": [],
+      "lastLogin": "2025-10-27T10:39:16.867Z"
+    },
+    {
+      "id": "1761635439173",
+      "username": "testing",
+      "password": "$2b$10$XgZNZ3PN6T9SLWrSyho2YeEZUDHYREQcIDhCKVsCYAO8uUAX3PzU2",
+      "role": "user",
+      "email": "",
+      "createdAt": "2025-10-28T07:10:39.173Z",
+      "assignedServers": []
+    }
+  ]
+}
