@@ -6,29 +6,18 @@ class MonitoringAPI {
   private tokens: Map<string, string> = new Map();
 
   constructor() {
-    // Use proxy routes to avoid mixed content issues when dashboard is on HTTPS
-    // The proxy is configured in next.config.ts
-    const useProxy = process.env.NEXT_PUBLIC_USE_API_PROXY === 'true' || 
-                     (typeof window !== 'undefined' && window.location.protocol === 'https:');
-    
     // Configure multiple servers
     const servers = {
       'ubuntu': {
-        url: useProxy 
-          ? '/api/ubuntu'
-          : (process.env.NEXT_PUBLIC_API_URL_UBUNTU || 'http://192.168.1.19:5000/api'),
+        url: process.env.NEXT_PUBLIC_API_URL_UBUNTU || 'http://192.168.1.19:5000/api',
         token: process.env.NEXT_PUBLIC_API_TOKEN_UBUNTU || 'mL0OIR28R1UL9Y2miGenl3i6JQxAemjl'
       },
       'windows': {
-        url: useProxy 
-          ? '/api/windows'
-          : (process.env.NEXT_PUBLIC_API_URL_WINDOWS || 'http://192.168.1.116:5000/api'),
+        url: process.env.NEXT_PUBLIC_API_URL_WINDOWS || 'http://192.168.1.116:5000/api',
         token: process.env.NEXT_PUBLIC_API_TOKEN_WINDOWS || 'sq98B4kGFQmv6NZjdP9ZISPRULXFXiiT'
       },
       'old-staging': {
-        url: useProxy 
-          ? '/api/old-staging'
-          : (process.env.NEXT_PUBLIC_API_URL_OLD_STAGING || 'http://135.148.164.94:5000/api'),
+        url: process.env.NEXT_PUBLIC_API_URL_OLD_STAGING || 'http://135.148.164.94:5000/api',
         token: process.env.NEXT_PUBLIC_API_TOKEN_OLD_STAGING || 'default_token'
       }
     };
