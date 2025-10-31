@@ -49,8 +49,9 @@ export default function DashboardPage() {
       let filteredServers = summary.servers;
       if (user?.role === 'user' && user?.assignedServers && user.assignedServers.length > 0) {
         // Users can only see their assigned servers
+        const assignedServers = user.assignedServers;
         filteredServers = summary.servers.filter(server => 
-          user.assignedServers.includes(server.ip)
+          assignedServers.includes(server.ip)
         );
       }
       // Admins can see all servers, no filtering needed
@@ -130,8 +131,95 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-4 sm:py-6">
+          {/* Mobile & Tablet Header */}
+          <div className="flex flex-col space-y-4 xl:hidden">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <img 
+                  src="/company-logo.svg" 
+                  alt="Company Logo" 
+                  className="h-10 w-auto flex-shrink-0"
+                />
+                <div className="min-w-0 flex-1">
+                  <h1 className="text-lg font-bold text-gray-900 dark:text-white leading-tight truncate">
+                    Orion Dashboard
+                  </h1>
+                  <p className="text-gray-600 dark:text-gray-400 text-xs truncate">
+                    {lastUpdate.toLocaleTimeString()}
+                  </p>
+                </div>
+              </div>
+              <div className="relative ml-2" ref={userMenuRef}>
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
+                  title="User menu"
+                >
+                  <MoreVertical className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                </button>
+                {showUserMenu && (
+                  <div className="absolute right-0 top-full mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-2 z-50">
+                    <div className="px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+                      <div className="flex items-center gap-3">
+                        <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-blue-600 dark:text-blue-300" />
+                        </div>
+                        <div>
+                          <div className="font-semibold text-gray-900 dark:text-white">{user?.username}</div>
+                          <div className="text-xs text-gray-500 dark:text-gray-400 capitalize">{user?.role}</div>
+                        </div>
+                      </div>
+                    </div>
+                    {isAdmin && (
+                      <button
+                        onClick={() => {
+                          router.push('/admin');
+                          setShowUserMenu(false);
+                        }}
+                        className="w-full flex items-center gap-3 px-4 py-2 text-left text-gray-700 dark:text-gray-300 hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors"
+                      >
+                        <Shield className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                        <span>Admin Panel</span>
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        logout();
+                        setShowUserMenu(false);
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-2 text-left text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Logout</span>
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
+                />
+                <span className="text-xs text-gray-700 dark:text-gray-300 whitespace-nowrap">Auto-refresh</span>
+              </label>
+              <button
+                onClick={fetchDashboardData}
+                disabled={loading}
+                className="flex items-center gap-2 px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm flex-1"
+              >
+                <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                <span>Refresh</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Large Desktop Header */}
+          <div className="hidden xl:flex items-center justify-between">
             <div className="flex items-center gap-4">
               <img 
                 src="/company-logo.svg" 
@@ -227,9 +315,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 xl:px-10 py-6 lg:py-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 lg:gap-5 xl:gap-6 mb-6 lg:mb-8">
           <StatsCard
             title="Total Servers"
             value={data?.stats.totalServers || 0}
@@ -257,9 +345,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Servers Grid */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Servers</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mb-6 lg:mb-8">
+          <h2 className="text-xl lg:text-2xl xl:text-3xl font-bold text-gray-900 dark:text-white mb-3 lg:mb-4">Servers</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-4 gap-4 lg:gap-5 xl:gap-6">
             {data?.servers.map((server) => (
               <ServerCard key={server.ip} server={server} />
             ))}
