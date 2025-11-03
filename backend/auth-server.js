@@ -15,7 +15,7 @@ const fs = require('fs').promises;
 const path = require('path');
 
 const app = express();
-const PORT = process.env.AUTH_PORT || 5001;
+const PORT = process.env.AUTH_PORT || 5003;
 const JWT_SECRET = process.env.JWT_SECRET || 'orion-monitoring-secret-key-change-in-production';
 const JWT_EXPIRATION = '24h';
 
