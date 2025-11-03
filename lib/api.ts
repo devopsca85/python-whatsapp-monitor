@@ -17,7 +17,7 @@ class MonitoringAPI {
         token: process.env.NEXT_PUBLIC_API_TOKEN_WINDOWS || 'sq98B4kGFQmv6NZjdP9ZISPRULXFXiiT'
       },
       'old-staging': {
-        url: process.env.NEXT_PUBLIC_API_URL_OLD_STAGING || 'http://135.148.164.94:5000/api',
+        url: process.env.NEXT_PUBLIC_API_URL_OLD_STAGING || 'https://oldstaging135api.customerdemourl.com/',
         token: process.env.NEXT_PUBLIC_API_TOKEN_OLD_STAGING || 'default_token'
       }
     };
