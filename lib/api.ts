@@ -17,7 +17,7 @@ class MonitoringAPI {
         token: process.env.NEXT_PUBLIC_API_TOKEN_WINDOWS || 'sq98B4kGFQmv6NZjdP9ZISPRULXFXiiT'
       },
       'old-staging': {
-        url: process.env.NEXT_PUBLIC_API_URL_OLD_STAGING || 'https://oldstaging135api.customerdemourl.com/',
+        url: process.env.NEXT_PUBLIC_API_URL_OLD_STAGING || 'http://135.148.164.94:5000/api',
         token: process.env.NEXT_PUBLIC_API_TOKEN_OLD_STAGING || 'default_token'
       }
     };
@@ -121,6 +121,19 @@ class MonitoringAPI {
                 
                 success = true; // Mark as successful
                 break; // Exit retry loop
+              } else if (response.status === 401 || response.status === 403) {
+                // Auth errors - don't retry, just log and continue
+                console.error(`Authentication failed for ${serverName}: ${response.status}`);
+                break;
+              } else if (response.status >= 500 && serverName === 'old-staging') {
+                // For old-staging, retry on 5xx errors as they might be temporary
+                if (retries < maxRetries) {
+                  retries++;
+                  const delay = 2000 * retries;
+                  console.warn(`Retry ${retries}/${maxRetries} for ${serverName} due to ${response.status} error`);
+                  await new Promise(resolve => setTimeout(resolve, delay));
+                  continue;
+                }
               }
             } catch (error: any) {
               const errorMessage = String(error?.message || '');
@@ -139,6 +152,7 @@ class MonitoringAPI {
                 errorCode === 'EHOSTUNREACH' ||
                 errorCode === 'ETIMEDOUT' ||
                 errorCode === 'ERR_NETWORK' ||
+                errorCode === 'ECONNRESET' ||
                 errorMessage.toLowerCase().includes('network error') ||
                 errorMessage.toLowerCase().includes('networkerror') ||
                 errorMessage.toLowerCase().includes('err_network') ||
@@ -146,15 +160,18 @@ class MonitoringAPI {
                 errorMessage.toLowerCase().includes('connection refused') ||
                 errorMessage.toLowerCase().includes('connectionerror') ||
                 errorMessage.toLowerCase().includes('getaddrinfo') ||
+                errorMessage.toLowerCase().includes('socket hang up') ||
                 errorString.toLowerCase().includes('network error')
               );
               
-              // Retry on timeout or network errors (but not on 4xx/5xx)
-              if (retries < maxRetries && (isTimeout || isNetworkError)) {
+              // For old-staging server, be more lenient with retries
+              const shouldRetry = retries < maxRetries && (isTimeout || isNetworkError);
+              
+              if (shouldRetry) {
                 retries++;
+                const delay = serverName === 'old-staging' ? 2000 * retries : 1000 * retries; // Longer delay for staging
                 console.warn(`Retry ${retries}/${maxRetries} for ${serverName} due to ${isTimeout ? 'timeout' : 'network error'}: ${errorMessage}`);
-                // Wait a bit before retrying (exponential backoff)
-                await new Promise(resolve => setTimeout(resolve, 1000 * retries));
+                await new Promise(resolve => setTimeout(resolve, delay));
                 continue; // Try again
               }
               
