@@ -61,7 +61,7 @@ export function ServerCard({ server }: ServerCardProps) {
           </div>
           <div>
             <h3 className="font-semibold text-gray-900 dark:text-white">
-              {(server as any).name || server.ip}
+              {server.ip === '135.148.164.94' ? 'Old Staging Server' : ((server as any).name || server.ip)}
             </h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">
               {server.ip}
@@ -78,6 +78,63 @@ export function ServerCard({ server }: ServerCardProps) {
 
       {/* Metrics */}
       <div className="space-y-3">
+        {/* Health Status Box for Old Staging Server */}
+        {server.ip === '135.148.164.94' && (
+          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4 mb-3">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h4 className="font-semibold text-gray-900 dark:text-white">Health Status</h4>
+            </div>
+            <div className="grid grid-cols-2 gap-3 text-sm">
+              {/* CPU */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 dark:text-gray-400">CPU:</span>
+                <span className={`font-semibold ${server.cpu >= 90 ? 'text-red-600' : server.cpu >= 75 ? 'text-yellow-600' : 'text-green-600'}`}>
+                  {server.cpu}%
+                </span>
+              </div>
+              {/* Memory */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Memory:</span>
+                <span className={`font-semibold ${server.ram >= 90 ? 'text-red-600' : server.ram >= 75 ? 'text-yellow-600' : 'text-green-600'}`}>
+                  {server.ram}%
+                </span>
+              </div>
+              {/* Disk */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Disk:</span>
+                <span className={`font-semibold ${server.disk >= 90 ? 'text-red-600' : server.disk >= 75 ? 'text-yellow-600' : 'text-green-600'}`}>
+                  {server.disk}%
+                </span>
+              </div>
+              {/* Database Status */}
+              <div className="flex items-center justify-between">
+                <span className="text-gray-600 dark:text-gray-400">Database:</span>
+                <span className={`font-semibold flex items-center gap-1 ${
+                  server.services?.mysql?.status === 'up' || 
+                  server.services?.postgresql?.status === 'up' || 
+                  server.services?.mongodb?.status === 'up' 
+                    ? 'text-green-600' 
+                    : 'text-red-600'
+                }`}>
+                  <div className={`w-2 h-2 rounded-full ${
+                    server.services?.mysql?.status === 'up' || 
+                    server.services?.postgresql?.status === 'up' || 
+                    server.services?.mongodb?.status === 'up' 
+                      ? 'bg-green-500' 
+                      : 'bg-red-500'
+                  }`} />
+                  {server.services?.mysql?.status === 'up' || 
+                   server.services?.postgresql?.status === 'up' || 
+                   server.services?.mongodb?.status === 'up' 
+                    ? 'UP' 
+                    : 'DOWN'}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* CPU */}
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -135,54 +192,61 @@ export function ServerCard({ server }: ServerCardProps) {
           </div>
         </div>
 
-        {/* Services */}
+        {/* Database Services Block */}
         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          <div className="flex items-center gap-2 mb-2">
-            <Database className="w-4 h-4 text-gray-600 dark:text-gray-400" />
-            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
-              {(server as any).serverType === 'windows' ? 'Database' : 'Services'}
-            </span>
+          {/* Title Bar */}
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-t-lg px-3 py-2 border-b border-gray-200 dark:border-gray-700">
+            <div className="flex items-center gap-2">
+              <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                {(server as any).serverType === 'windows' ? 'Database Services' : 'Database Services'}
+              </span>
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-xs">
-            {/* Show MSSQL for Windows, others for Ubuntu */}
-            {(server as any).serverType === 'windows' ? (
-              <div className="flex items-center gap-1">
-                <div className={`w-2 h-2 rounded-full ${server.services?.mssql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                <span className="text-gray-600 dark:text-gray-400">MSSQL</span>
+          
+          {/* Services Content */}
+          <div className="bg-gray-50 dark:bg-gray-900 rounded-b-lg p-3">
+            <div className="grid grid-cols-3 gap-2 text-xs">
+              {/* Show MSSQL for Windows, others for Ubuntu */}
+              {(server as any).serverType === 'windows' ? (
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${server.services?.mssql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-gray-600 dark:text-gray-400">MSSQL</span>
+                </div>
+              ) : (
+                <>
+                  {/* MySQL */}
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${server.services?.mysql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-gray-600 dark:text-gray-400">MySQL</span>
+                  </div>
+                  {/* PostgreSQL */}
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${server.services?.postgresql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-gray-600 dark:text-gray-400">PostgreSQL</span>
+                  </div>
+                  {/* MongoDB */}
+                  <div className="flex items-center gap-1">
+                    <div className={`w-2 h-2 rounded-full ${server.services?.mongodb?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                    <span className="text-gray-600 dark:text-gray-400">MongoDB</span>
+                  </div>
+                </>
+              )}
+            </div>
+            {/* Show MSSQL details for Windows */}
+            {(server as any).serverType === 'windows' && server.services?.mssql && (
+              <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                <div className="flex justify-between">
+                  <span>Databases:</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{server.services.mssql.databases || 0}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span>Tables:</span>
+                  <span className="font-semibold text-gray-900 dark:text-white">{server.services.mssql.tables || 0}</span>
+                </div>
               </div>
-            ) : (
-              <>
-                {/* MySQL */}
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${server.services?.mysql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-gray-600 dark:text-gray-400">MySQL</span>
-                </div>
-                {/* PostgreSQL */}
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${server.services?.postgresql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-gray-600 dark:text-gray-400">PostgreSQL</span>
-                </div>
-                {/* MongoDB */}
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${server.services?.mongodb?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-gray-600 dark:text-gray-400">MongoDB</span>
-                </div>
-              </>
             )}
           </div>
-          {/* Show MSSQL details for Windows */}
-          {(server as any).serverType === 'windows' && server.services?.mssql && (
-            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
-              <div className="flex justify-between">
-                <span>Databases:</span>
-                <span className="font-semibold">{server.services.mssql.databases || 0}</span>
-              </div>
-              <div className="flex justify-between">
-                <span>Tables:</span>
-                <span className="font-semibold">{server.services.mssql.tables || 0}</span>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* SQL Jobs (Windows only) */}
