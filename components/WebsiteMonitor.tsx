@@ -2,10 +2,13 @@ import { WebsiteStatus } from '@/types/monitoring';
 import { Globe, CheckCircle, XCircle, Clock } from 'lucide-react';
 
 interface WebsiteMonitorProps {
-  websites: WebsiteStatus[];
+  websites?: WebsiteStatus[];
 }
 
 export function WebsiteMonitor({ websites }: WebsiteMonitorProps) {
+  // Ensure websites is always an array
+  const websitesList = websites || [];
+  
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'up':
@@ -45,7 +48,7 @@ export function WebsiteMonitor({ websites }: WebsiteMonitorProps) {
       </div>
 
       <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-        {websites.map((site, index) => (
+        {websitesList.map((site, index) => (
           <div
             key={site.url || `website-${index}`}
             className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
@@ -92,7 +95,7 @@ export function WebsiteMonitor({ websites }: WebsiteMonitorProps) {
           </div>
         ))}
 
-        {websites.length === 0 && (
+        {websitesList.length === 0 && (
           <div className="text-center py-4 text-gray-500 dark:text-gray-400">
             <Globe className="w-10 h-10 mx-auto mb-1 opacity-50" />
             <p className="text-sm">No websites found</p>
