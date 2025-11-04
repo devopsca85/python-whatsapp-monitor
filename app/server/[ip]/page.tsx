@@ -12,23 +12,66 @@ interface ServerDetails {
   name?: string;
   status: 'up' | 'down' | 'slow';
   serverType?: 'ubuntu' | 'windows';
-  system?: {
-    cpu?: { current: number; cores: number; load: number[] };
-    memory?: { current: number; total: number; available: number; used: number };
-    disk?: { current: number; total: number; free: number; used: number };
-    uptime?: string;
-    boot_time?: string;
-    lastCheck?: string;
+  system: {
+    cpu: {
+      current: number;
+      cores: number;
+      load: number[];
+    };
+    memory: {
+      current: number;
+      total: number;
+      available: number;
+      used: number;
+    };
+    disk: {
+      current: number;
+      total: number;
+      free: number;
+      used: number;
+    };
+    uptime: string;
+    boot_time: string;
+    lastCheck: string;
   };
-  databases?: {
-    mysql?: { status: string; databases: Record<string, any>; lastCheck: string };
-    postgresql?: { status: string; databases: Record<string, any>; lastCheck: string };
-    mongodb?: { status: string; databases: Record<string, any>; lastCheck: string };
-    mssql?: { status: string; databases: any[]; count: number; tables: number; lastCheck?: string };
+  databases: {
+    mysql?: {
+      status: string;
+      databases: Record<string, any>;
+      lastCheck: string;
+    };
+    postgresql?: {
+      status: string;
+      databases: Record<string, any>;
+      lastCheck: string;
+    };
+    mongodb?: {
+      status: string;
+      databases: Record<string, any>;
+      lastCheck: string;
+    };
+    mssql?: {
+      status: string;
+      databases: any[];
+      count: number;
+      tables: number;
+      lastCheck?: string;
+    };
   };
-  sqlJobs?: { total: number; running: number; failed: number; succeeded: number };
-  websites?: Array<{ url: string; status: string; responseTime: number; statusCode?: number; lastCheck: string }>;
-  alerts?: Array<any>;
+  sqlJobs?: {
+    total: number;
+    running: number;
+    failed: number;
+    succeeded: number;
+  };
+  websites: Array<{
+    url: string;
+    status: string;
+    responseTime: number;
+    statusCode?: number;
+    lastCheck: string;
+  }>;
+  alerts: Array<any>;
   lastUpdate?: string;
 }
 
@@ -37,21 +80,24 @@ export default function ServerDetailsPage() {
   const router = useRouter();
   const { user, isAuthenticated, loading: authLoading } = useAuth();
   const serverIp = params.ip as string;
-
+  
   const [serverDetails, setServerDetails] = useState<ServerDetails | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
 
+  // Redirect to login if not authenticated
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
   }, [authLoading, isAuthenticated, router]);
 
+  // Check if user has permission to view this server
   useEffect(() => {
     if (user && user.role === 'user') {
       if (!user.assignedServers || !user.assignedServers.includes(serverIp)) {
+        // User doesn't have access to this server
         router.push('/');
       }
     }
@@ -76,7 +122,8 @@ export default function ServerDetailsPage() {
 
   useEffect(() => {
     if (!autoRefresh) return;
-    const interval = setInterval(fetchServerDetails, 15000);
+
+    const interval = setInterval(fetchServerDetails, 15000); // Refresh every 15 seconds for real-time updates
     return () => clearInterval(interval);
   }, [autoRefresh, serverIp]);
 
@@ -107,15 +154,18 @@ export default function ServerDetailsPage() {
   };
 
   const formatBytes = (bytes: number) => {
-    if (!bytes) return '0 Bytes';
+    if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  const formatUptime = (uptime?: string) => uptime || 'N/A';
+  const formatUptime = (uptime: string) => {
+    return uptime || 'Unknown';
+  };
 
+  // Show loading while checking authentication or fetching data
   if (authLoading || !isAuthenticated || loading) {
     return (
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex items-center justify-center">
@@ -150,18 +200,74 @@ export default function ServerDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
-      {/* (same header as before) */}
+      <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
+          <div className="flex items-center justify-between py-6 min-h-[100px]">
+            <div className="flex items-center space-x-6">
+              <button
+                onClick={() => router.back()}
+                className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+              >
+                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
+              <img 
+                src="/company-logo.svg" 
+                alt="Company Logo" 
+                className="h-10 w-auto"
+              />
+              <div className="border-l border-gray-300 dark:border-gray-600 pl-5 h-16 flex items-center">
+                <div className="flex items-center space-x-5">
+                  <div className="p-4 rounded-lg bg-blue-100 dark:bg-blue-900 min-w-[64px] min-h-[64px] flex items-center justify-center">
+                    <Server className="w-8 h-8 text-blue-600" />
+                  </div>
+                  <div className="flex flex-col justify-center space-y-1.5">
+                    <h1 className="text-xl font-semibold text-gray-900 dark:text-white leading-tight">
+                      {serverDetails.name || `Server ${serverDetails.ip}`}
+                    </h1>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      {serverDetails.ip}
+                    </p>
+                    <div className="flex items-center space-x-2">
+                      {getStatusIcon(serverDetails.status)}
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(serverDetails.status)} min-w-[50px] text-center`}>
+                        {serverDetails.status.toUpperCase()}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="flex items-center space-x-5">
+              <div className="flex items-center space-x-3">
+                <input
+                  type="checkbox"
+                  id="auto-refresh"
+                  checked={autoRefresh}
+                  onChange={(e) => setAutoRefresh(e.target.checked)}
+                  className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <label htmlFor="auto-refresh" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                  Auto-refresh
+                </label>
+              </div>
+              <button
+                onClick={fetchServerDetails}
+                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
+              >
+                Refresh
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Websites */}
           <div className="lg:col-span-2">
-            {serverDetails?.websites ? (
-              <WebsiteMonitor websites={serverDetails.websites as any} />
-            ) : (
-              <p className="text-gray-500 dark:text-gray-400">No website data available</p>
-            )}
+            <WebsiteMonitor websites={serverDetails.websites as any} />
           </div>
 
           {/* Sidebar */}
@@ -172,106 +278,226 @@ export default function ServerDetailsPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Uptime:</span>
-                  <span className="text-gray-900 dark:text-white">
-                    {serverDetails?.system?.uptime ? formatUptime(serverDetails.system.uptime) : 'N/A'}
-                  </span>
+                  <span className="text-gray-900 dark:text-white">{formatUptime(serverDetails.system.uptime)}</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Boot Time:</span>
                   <span className="text-gray-900 dark:text-white">
-                    {serverDetails?.system?.boot_time
-                      ? new Date(serverDetails.system.boot_time).toLocaleString()
-                      : 'N/A'}
+                    {new Date(serverDetails.system.boot_time).toLocaleString()}
                   </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Last Check:</span>
                   <span className="text-gray-900 dark:text-white">
-                    {serverDetails?.system?.lastCheck
-                      ? new Date(serverDetails.system.lastCheck).toLocaleString()
-                      : 'N/A'}
+                    {new Date(serverDetails.system.lastCheck).toLocaleString()}
                   </span>
                 </div>
               </div>
             </div>
+
+            {/* Services Status */}
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+              <div className="flex items-center space-x-2 mb-4">
+                <Database className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Services</h3>
+              </div>
+              <div className="space-y-3">
+                {/* Show MSSQL for Windows, others for Ubuntu */}
+                {serverDetails.serverType === 'windows' ? (
+                  <>
+                    {/* MSSQL for Windows */}
+                    {serverDetails.databases?.mssql && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">MSSQL:</span>
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(serverDetails.databases.mssql.status)}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            serverDetails.databases.mssql.status === 'up' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          }`}>
+                            {serverDetails.databases.mssql.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {/* MSSQL Details */}
+                    {serverDetails.databases?.mssql && (
+                      <div className="mt-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Databases:</span>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {serverDetails.databases.mssql.count || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Tables:</span>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {serverDetails.databases.mssql.tables || 0}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {/* SQL Jobs Section */}
+                    {serverDetails.sqlJobs && (
+                      <div className="mt-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <h4 className="text-sm font-semibold text-gray-900 dark:text-white mb-3">SQL Server Agent Jobs</h4>
+                        <div className="grid grid-cols-2 gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Total Jobs:</span>
+                            <p className="text-lg font-semibold text-gray-900 dark:text-white">
+                              {serverDetails.sqlJobs.total || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Running:</span>
+                            <p className="text-lg font-semibold text-blue-600 dark:text-blue-400">
+                              {serverDetails.sqlJobs.running || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Succeeded:</span>
+                            <p className="text-lg font-semibold text-green-600 dark:text-green-400">
+                              {serverDetails.sqlJobs.succeeded || 0}
+                            </p>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 dark:text-gray-400">Failed:</span>
+                            <p className="text-lg font-semibold text-red-600 dark:text-red-400">
+                              {serverDetails.sqlJobs.failed || 0}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    {/* MySQL, PostgreSQL, MongoDB for Ubuntu */}
+                    {serverDetails.databases?.mysql && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">MySQL:</span>
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(serverDetails.databases.mysql.status)}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            serverDetails.databases.mysql.status === 'up' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          }`}>
+                            {serverDetails.databases.mysql.status.toUpperCase()}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {serverDetails.databases?.postgresql && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">PostgreSQL:</span>
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(serverDetails.databases.postgresql.status)}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            serverDetails.databases.postgresql.status?.toUpperCase() === 'UP' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          }`}>
+                            {serverDetails.databases.postgresql.status?.toUpperCase() || 'NOT AVAILABLE'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {serverDetails.databases?.mongodb && (
+                      <div className="flex items-center justify-between">
+                        <span className="text-gray-600 dark:text-gray-400">MongoDB:</span>
+                        <div className="flex items-center space-x-2">
+                          {getStatusIcon(serverDetails.databases.mongodb.status)}
+                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                            serverDetails.databases.mongodb.status?.toUpperCase() === 'UP' 
+                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                          }`}>
+                            {serverDetails.databases.mongodb.status?.toUpperCase() || 'NOT AVAILABLE'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+
           </div>
         </div>
 
         {/* System Metrics */}
-        {serverDetails?.system && (
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* CPU */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <Cpu className="w-5 h-5 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
-                </div>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {serverDetails?.system?.cpu?.current ?? 0}%
-                </span>
+        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* CPU */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <Cpu className="w-5 h-5 text-blue-600" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${serverDetails?.system?.cpu?.current ?? 0}%` }}
-                ></div>
-              </div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {serverDetails?.system?.cpu?.cores ?? 0} cores • Load:{' '}
-                {serverDetails?.system?.cpu?.load?.join(', ') || 'N/A'}
-              </div>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {serverDetails.system.cpu.current}%
+              </span>
             </div>
-
-            {/* Memory */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <MemoryStick className="w-5 h-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
-                </div>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {serverDetails?.system?.memory?.current ?? 0}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-green-600 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${serverDetails?.system?.memory?.current ?? 0}%` }}
-                ></div>
-              </div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {formatBytes(serverDetails?.system?.memory?.used ?? 0)} /{' '}
-                {formatBytes(serverDetails?.system?.memory?.total ?? 0)} used
-              </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div
+                className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${serverDetails.system.cpu.current}%` }}
+              ></div>
             </div>
-
-            {/* Disk */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center space-x-2">
-                  <HardDrive className="w-5 h-5 text-purple-600" />
-                  <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
-                </div>
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {serverDetails?.system?.disk?.current ?? 0}%
-                </span>
-              </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div
-                  className="bg-purple-600 h-3 rounded-full transition-all duration-300"
-                  style={{ width: `${serverDetails?.system?.disk?.current ?? 0}%` }}
-                ></div>
-              </div>
-              <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-                {formatBytes(serverDetails?.system?.disk?.used ?? 0)} /{' '}
-                {formatBytes(serverDetails?.system?.disk?.total ?? 0)} used
-              </div>
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {serverDetails.system.cpu.cores} cores • Load: {serverDetails.system.cpu.load.join(', ')}
             </div>
           </div>
-        )}
+
+          {/* Memory */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <MemoryStick className="w-5 h-5 text-green-600" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
+              </div>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {serverDetails.system.memory.current}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div
+                className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${serverDetails.system.memory.current}%` }}
+              ></div>
+            </div>
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {formatBytes(serverDetails.system.memory.used)} / {formatBytes(serverDetails.system.memory.total)} used
+            </div>
+          </div>
+
+          {/* Disk */}
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center space-x-2">
+                <HardDrive className="w-5 h-5 text-purple-600" />
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
+              </div>
+              <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                {serverDetails.system.disk.current}%
+              </span>
+            </div>
+            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+              <div
+                className="bg-purple-600 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${serverDetails.system.disk.current}%` }}
+              ></div>
+            </div>
+            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              {formatBytes(serverDetails.system.disk.used)} / {formatBytes(serverDetails.system.disk.total)} used
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-

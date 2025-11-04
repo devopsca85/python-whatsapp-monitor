@@ -135,61 +135,54 @@ export function ServerCard({ server }: ServerCardProps) {
           </div>
         </div>
 
-        {/* Database Services Block */}
+        {/* Services */}
         <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
-          {/* Title Bar */}
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-t-lg px-3 py-2 border-b border-gray-200 dark:border-gray-700">
-            <div className="flex items-center gap-2">
-              <Database className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-              <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                {(server as any).serverType === 'windows' ? 'Database Services' : 'Database Services'}
-              </span>
-            </div>
+          <div className="flex items-center gap-2 mb-2">
+            <Database className="w-4 h-4 text-gray-600 dark:text-gray-400" />
+            <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+              {(server as any).serverType === 'windows' ? 'Database' : 'Services'}
+            </span>
           </div>
-          
-          {/* Services Content */}
-          <div className="bg-gray-50 dark:bg-gray-900 rounded-b-lg p-3">
-            <div className="grid grid-cols-3 gap-2 text-xs">
-              {/* Show MSSQL for Windows, others for Ubuntu */}
-              {(server as any).serverType === 'windows' ? (
-                <div className="flex items-center gap-1">
-                  <div className={`w-2 h-2 rounded-full ${server.services?.mssql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                  <span className="text-gray-600 dark:text-gray-400">MSSQL</span>
-                </div>
-              ) : (
-                <>
-                  {/* MySQL */}
-                  <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${server.services?.mysql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="text-gray-600 dark:text-gray-400">MySQL</span>
-                  </div>
-                  {/* PostgreSQL */}
-                  <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${server.services?.postgresql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="text-gray-600 dark:text-gray-400">PostgreSQL</span>
-                  </div>
-                  {/* MongoDB */}
-                  <div className="flex items-center gap-1">
-                    <div className={`w-2 h-2 rounded-full ${server.services?.mongodb?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
-                    <span className="text-gray-600 dark:text-gray-400">MongoDB</span>
-                  </div>
-                </>
-              )}
-            </div>
-            {/* Show MSSQL details for Windows */}
-            {(server as any).serverType === 'windows' && server.services?.mssql && (
-              <div className="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
-                <div className="flex justify-between">
-                  <span>Databases:</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{server.services.mssql.databases || 0}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span>Tables:</span>
-                  <span className="font-semibold text-gray-900 dark:text-white">{server.services.mssql.tables || 0}</span>
-                </div>
+          <div className="grid grid-cols-3 gap-2 text-xs">
+            {/* Show MSSQL for Windows, others for Ubuntu */}
+            {(server as any).serverType === 'windows' ? (
+              <div className="flex items-center gap-1">
+                <div className={`w-2 h-2 rounded-full ${server.services?.mssql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                <span className="text-gray-600 dark:text-gray-400">MSSQL</span>
               </div>
+            ) : (
+              <>
+                {/* MySQL */}
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${server.services?.mysql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-gray-600 dark:text-gray-400">MySQL</span>
+                </div>
+                {/* PostgreSQL */}
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${server.services?.postgresql?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-gray-600 dark:text-gray-400">PostgreSQL</span>
+                </div>
+                {/* MongoDB */}
+                <div className="flex items-center gap-1">
+                  <div className={`w-2 h-2 rounded-full ${server.services?.mongodb?.status === 'up' ? 'bg-green-500' : 'bg-red-500'}`} />
+                  <span className="text-gray-600 dark:text-gray-400">MongoDB</span>
+                </div>
+              </>
             )}
           </div>
+          {/* Show MSSQL details for Windows */}
+          {(server as any).serverType === 'windows' && server.services?.mssql && (
+            <div className="mt-2 text-xs text-gray-500 dark:text-gray-400">
+              <div className="flex justify-between">
+                <span>Databases:</span>
+                <span className="font-semibold">{server.services.mssql.databases || 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span>Tables:</span>
+                <span className="font-semibold">{server.services.mssql.tables || 0}</span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* SQL Jobs (Windows only) */}
