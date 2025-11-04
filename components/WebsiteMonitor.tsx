@@ -104,25 +104,3 @@ export function WebsiteMonitor({ websites }: WebsiteMonitorProps) {
   );
 }
 
-
-root/.pm2/logs/montoring-dashboard-backend-error.log last 20 lines:
-2|montorin | Error loading users: Error: ENOENT: no such file or directory, open '/opt/monitor.customerdemourl.com/backend/data/users.json'
-2|montorin |     at async open (node:internal/fs/promises:641:25)
-2|montorin |     at async Object.readFile (node:internal/fs/promises:1245:14)
-2|montorin |     at async loadUsers (/opt/monitor.customerdemourl.com/backend/auth-server.js:55:18)
-2|montorin |     at async /opt/monitor.customerdemourl.com/backend/auth-server.js:136:23 {
-2|montorin |   errno: -2,
-2|montorin |   code: 'ENOENT',
-2|montorin |   syscall: 'open',
-2|montorin |   path: '/opt/monitor.customerdemourl.com/backend/data/users.json'
-2|montorin | }
-2|montorin | Error loading users: Error: ENOENT: no such file or directory, open '/opt/monitor.customerdemourl.com/backend/data/users.json'
-2|montorin |     at async open (node:internal/fs/promises:641:25)
-2|montorin |     at async Object.readFile (node:internal/fs/promises:1245:14)
-2|montorin |     at async loadUsers (/opt/monitor.customerdemourl.com/backend/auth-server.js:55:18)
-2|montorin |     at async /opt/monitor.customerdemourl.com/backend/auth-server.js:136:23 {
-2|montorin |   errno: -2,
-2|montorin |   code: 'ENOENT',
-2|montorin |   syscall: 'open',
-2|montorin |   path: '/opt/monitor.customerdemourl.com/backend/data/users.json'
-2|montorin | }
