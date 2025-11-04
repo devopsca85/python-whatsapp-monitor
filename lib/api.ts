@@ -122,8 +122,10 @@ class MonitoringAPI {
                 success = true; // Mark as successful
                 break; // Exit retry loop
               } else if (response.status === 401 || response.status === 403) {
-                // Auth errors - don't retry, just log and continue
-                console.error(`Authentication failed for ${serverName}: ${response.status}`);
+                // Auth errors - don't mark as down, just log and skip this server
+                const safeError = `Authentication failed for ${serverName}. Check API token in environment variables.`;
+                console.warn(safeError);
+                // Don't add offline server for auth errors - skip it entirely
                 break;
               } else if (response.status >= 500 && serverName === 'old-staging') {
                 // For old-staging, retry on 5xx errors as they might be temporary
