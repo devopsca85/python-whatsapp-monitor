@@ -80,7 +80,7 @@ class MonitoringAPI {
       for (const [serverName, client] of this.clients) {
         try {
           let retries = 0;
-          const maxRetries = serverName === 'old-staging' ? 2 : 1; // More retries for staging
+          const maxRetries = serverName === 'old-staging' ? 3 : 1; // More retries for staging
           let success = false;
           
           while (retries <= maxRetries && !success) {
@@ -181,7 +181,9 @@ class MonitoringAPI {
                 if (isNetworkError || isTimeout) {
                   console.warn(`Server ${serverName} unreachable after ${retries} retries: ${errorMessage || 'Network error'}`);
                 } else {
-                  console.error(`Error fetching data from ${serverName} after ${retries} retries:`, errorMessage || error);
+                  // Safely log error without circular references
+                  const safeError = errorMessage || String(error?.message || error?.code || error || 'Unknown error');
+                  console.error(`Error fetching data from ${serverName} after ${retries} retries:`, safeError);
                 }
                 break; // Exit retry loop
               }
@@ -223,7 +225,8 @@ class MonitoringAPI {
           }
         } catch (outerError: any) {
           // Catch any unexpected errors to prevent dashboard crash
-          console.error(`Unexpected error for server ${serverName}:`, outerError);
+          const safeError = String(outerError?.message || outerError?.code || outerError || 'Unknown error');
+          console.error(`Unexpected error for server ${serverName}:`, safeError);
           // Continue to next server
         }
       }
@@ -247,7 +250,9 @@ class MonitoringAPI {
         stats
       };
     } catch (error: any) {
-      console.error('Error fetching dashboard summary:', error);
+      // Safely log error without circular references
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error fetching dashboard summary:', safeError);
       // Return empty dashboard instead of throwing to prevent crash
       return {
         servers: [],
@@ -282,14 +287,16 @@ class MonitoringAPI {
             alert.serverType = serverName;
             allAlerts.push(alert);
           });
-        } catch (error) {
-          console.error(`Error fetching alerts from ${serverName}:`, error);
+        } catch (error: any) {
+          const safeError = String(error?.message || error?.code || error || 'Unknown error');
+          console.error(`Error fetching alerts from ${serverName}:`, safeError);
         }
       }
       
       return allAlerts.slice(0, limit);
-    } catch (error) {
-      console.error('Error fetching alerts:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error fetching alerts:', safeError);
       throw error;
     }
   }
@@ -303,8 +310,9 @@ class MonitoringAPI {
         return response.data;
       }
       throw new Error('No Ubuntu client available');
-    } catch (error) {
-      console.error('Error fetching config:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error fetching config:', safeError);
       throw error;
     }
   }
@@ -318,8 +326,9 @@ class MonitoringAPI {
         return response.data;
       }
       throw new Error('No Ubuntu client available');
-    } catch (error) {
-      console.error('Error updating config:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error updating config:', safeError);
       throw error;
     }
   }
@@ -345,8 +354,9 @@ class MonitoringAPI {
         params: { server, hours },
       });
       return response.data;
-    } catch (error) {
-      console.error('Error fetching performance data:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error fetching performance data:', safeError);
       throw error;
     }
   }
@@ -360,8 +370,9 @@ class MonitoringAPI {
         return response.data;
       }
       throw new Error('No Ubuntu client available');
-    } catch (error) {
-      console.error('Error testing connection:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error testing connection:', safeError);
       throw error;
     }
   }
@@ -375,8 +386,9 @@ class MonitoringAPI {
         return response.data;
       }
       throw new Error('No Ubuntu client available');
-    } catch (error) {
-      console.error('Error sending test alert:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error sending test alert:', safeError);
       throw error;
     }
   }
@@ -392,7 +404,7 @@ class MonitoringAPI {
       const client = this.clients.get(serverName);
       if (!client) throw new Error(`No client configured for server: ${serverName}`);
 
-      let retries = serverName === 'old-staging' ? 2 : 1;
+      let retries = serverName === 'old-staging' ? 3 : 1;
       while (retries >= 0) {
         try {
           const response = await client.get(`/dashboard/server/${serverIp}` as const, {
@@ -404,13 +416,22 @@ class MonitoringAPI {
             const data = response.data;
             data.serverType = serverName;
             return data;
+          } else if (response.status === 401 || response.status === 403) {
+            // Auth errors - don't retry
+            console.error(`Authentication failed for ${serverName}: ${response.status}`);
+            break;
+          } else if (response.status >= 500 && serverName === 'old-staging' && retries > 0) {
+            // Retry on 5xx errors for old-staging
+            await new Promise(r => setTimeout(r, 2000 * (3 - retries)));
+            retries -= 1;
+            continue;
           }
         } catch (err: any) {
           const code = String(err?.code || '').toLowerCase();
           const msg = String(err?.message || '').toLowerCase();
-          const isNetwork = !err?.response && (code.includes('econn') || code.includes('network') || msg.includes('timeout') || msg.includes('failed to fetch'));
+          const isNetwork = !err?.response && (code.includes('econn') || code.includes('network') || msg.includes('timeout') || msg.includes('failed to fetch') || code.includes('etimedout') || code.includes('econnreset'));
           if (retries > 0 && isNetwork) {
-            await new Promise(r => setTimeout(r, 1000));
+            await new Promise(r => setTimeout(r, serverName === 'old-staging' ? 2000 * (3 - retries) : 1000));
             retries -= 1;
             continue;
           }
@@ -435,8 +456,9 @@ class MonitoringAPI {
           mongodb: { status: 'down', databases: 0, collections: 0 },
         },
       } as any;
-    } catch (error) {
-      console.error('Error fetching server details:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error fetching server details:', safeError);
       // Final defensive fallback
       return {
         ip: serverIp,
@@ -467,8 +489,9 @@ class MonitoringAPI {
       
       const response = await client.get('/health');
       return response.data;
-    } catch (error) {
-      console.error('Error checking server health:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error checking server health:', safeError);
       throw error;
     }
   }
@@ -483,8 +506,9 @@ class MonitoringAPI {
         return response.data;
       }
       throw new Error('No Ubuntu client available');
-    } catch (error) {
-      console.error('Error fetching system metrics:', error);
+    } catch (error: any) {
+      const safeError = String(error?.message || error?.code || error || 'Unknown error');
+      console.error('Error fetching system metrics:', safeError);
       throw error;
     }
   }
