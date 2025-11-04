@@ -233,10 +233,9 @@ export default function ServerDetailsPage() {
                         {serverDetails.status.toUpperCase()}
                       </span>
                     </div>
-            )}
-          </div>
-        )}
-      </div>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <div className="flex items-center space-x-5">
@@ -299,9 +298,8 @@ export default function ServerDetailsPage() {
                   )}
                 </div>
               </div>
-            )}
 
-            {/* Services Status */}
+            )}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Database className="w-5 h-5 text-blue-600" />
