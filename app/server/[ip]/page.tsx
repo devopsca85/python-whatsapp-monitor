@@ -273,33 +273,35 @@ export default function ServerDetailsPage() {
           {/* Sidebar */}
           <div className="space-y-6">
             {/* System Info */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Information</h3>
-              <div className="space-y-3">
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Uptime:</span>
-                  <span className="text-gray-900 dark:text-white">{formatUptime(serverDetails.system.uptime || 'Unknown')}</span>
-                </div>
-                {serverDetails.system.boot_time && (
+            {serverDetails.system && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Information</h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600 dark:text-gray-400">Uptime:</span>
+                    <span className="text-gray-900 dark:text-white">{formatUptime(serverDetails.system.uptime || 'Unknown')}</span>
+                  </div>
+                  {serverDetails.system.boot_time && (
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-400">Boot Time:</span>
-                  <span className="text-gray-900 dark:text-white">
-                    {new Date(serverDetails.system.boot_time).toLocaleString()}
-                  </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {new Date(serverDetails.system.boot_time).toLocaleString()}
+                      </span>
                     </div>
                   )}
                   {serverDetails.system.lastCheck && (
                     <div className="flex justify-between">
                       <span className="text-gray-600 dark:text-gray-400">Last Check:</span>
-                  <span className="text-gray-900 dark:text-white">
-                    {new Date(serverDetails.system.lastCheck).toLocaleString()}
-                  </span>
+                      <span className="text-gray-900 dark:text-white">
+                        {new Date(serverDetails.system.lastCheck).toLocaleString()}
+                      </span>
                     </div>
                   )}
                 </div>
               </div>
-
             )}
+
+            {/* Services Status */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
               <div className="flex items-center space-x-2 mb-4">
                 <Database className="w-5 h-5 text-blue-600" />
