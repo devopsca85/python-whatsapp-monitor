@@ -430,17 +430,17 @@ export default function ServerDetailsPage() {
                   </>
                 )}
               </div>
-            )}
           </div>
-        )}
       </div>
 
         {/* System Metrics */}
-        <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {serverDetails.system && (
+          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* CPU */}
           <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
+            {/* CPU */}
+            {serverDetails.system.cpu && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
                 <Cpu className="w-5 h-5 text-blue-600" />
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
               </div>
