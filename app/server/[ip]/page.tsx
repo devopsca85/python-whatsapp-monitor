@@ -233,9 +233,10 @@ export default function ServerDetailsPage() {
                         {serverDetails.status.toUpperCase()}
                       </span>
                     </div>
-                  </div>
-                </div>
-              </div>
+            )}
+          </div>
+        )}
+      </div>
             </div>
             
             <div className="flex items-center space-x-5">
@@ -278,22 +279,27 @@ export default function ServerDetailsPage() {
               <div className="space-y-3">
                 <div className="flex justify-between">
                   <span className="text-gray-600 dark:text-gray-400">Uptime:</span>
-                  <span className="text-gray-900 dark:text-white">{formatUptime(serverDetails.system.uptime)}</span>
+                  <span className="text-gray-900 dark:text-white">{formatUptime(serverDetails.system.uptime || 'Unknown')}</span>
                 </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Boot Time:</span>
+                {serverDetails.system.boot_time && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Boot Time:</span>
                   <span className="text-gray-900 dark:text-white">
                     {new Date(serverDetails.system.boot_time).toLocaleString()}
                   </span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600 dark:text-gray-400">Last Check:</span>
+                    </div>
+                  )}
+                  {serverDetails.system.lastCheck && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600 dark:text-gray-400">Last Check:</span>
                   <span className="text-gray-900 dark:text-white">
                     {new Date(serverDetails.system.lastCheck).toLocaleString()}
                   </span>
+                    </div>
+                  )}
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Services Status */}
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
@@ -424,10 +430,10 @@ export default function ServerDetailsPage() {
                   </>
                 )}
               </div>
-            </div>
-
+            )}
           </div>
-        </div>
+        )}
+      </div>
 
         {/* System Metrics */}
         <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -439,17 +445,17 @@ export default function ServerDetailsPage() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
               </div>
               <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {serverDetails.system.cpu.current}%
+                {serverDetails.system.cpu.current || 0}%
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
               <div
                 className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${serverDetails.system.cpu.current}%` }}
+                style={{ width: `${serverDetails.system.cpu.current || 0}%` }}
               ></div>
             </div>
             <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {serverDetails.system.cpu.cores} cores • Load: {serverDetails.system.cpu.load.join(', ')}
+              {serverDetails.system.cpu.cores} cores • Load: {serverDetails.system.cpu.load && serverDetails.system.cpu.load.length > 0 ? serverDetails.system.cpu.load.join(\', \') : \'N/A\'}
             </div>
           </div>
 
@@ -461,17 +467,17 @@ export default function ServerDetailsPage() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
               </div>
               <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {serverDetails.system.memory.current}%
+                {serverDetails.system.memory.current || 0}%
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
               <div
                 className="bg-green-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${serverDetails.system.memory.current}%` }}
+                style={{ width: `${serverDetails.system.memory.current || 0}%` }}
               ></div>
             </div>
             <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {formatBytes(serverDetails.system.memory.used)} / {formatBytes(serverDetails.system.memory.total)} used
+              {formatBytes(serverDetails.system.memory.used || 0)} / {formatBytes(serverDetails.system.memory.total || 0)} used
             </div>
           </div>
 
@@ -483,17 +489,17 @@ export default function ServerDetailsPage() {
                 <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
               </div>
               <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {serverDetails.system.disk.current}%
+                {serverDetails.system.disk.current || 0}%
               </span>
             </div>
             <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
               <div
                 className="bg-purple-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${serverDetails.system.disk.current}%` }}
+                style={{ width: `${serverDetails.system.disk.current || 0}%` }}
               ></div>
             </div>
             <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {formatBytes(serverDetails.system.disk.used)} / {formatBytes(serverDetails.system.disk.total)} used
+              {formatBytes(serverDetails.system.disk.used || 0)} / {formatBytes(serverDetails.system.disk.total || 0)} used
             </div>
           </div>
         </div>
