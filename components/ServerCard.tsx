@@ -78,63 +78,6 @@ export function ServerCard({ server }: ServerCardProps) {
 
       {/* Metrics */}
       <div className="space-y-3">
-        {/* Health Status Box for Old Staging Server */}
-        {server.ip === '135.148.164.94' && (
-          <div className="bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800 p-4 mb-3">
-            <div className="flex items-center gap-2 mb-3">
-              <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
-              <h4 className="font-semibold text-gray-900 dark:text-white">Health Status</h4>
-            </div>
-            <div className="grid grid-cols-2 gap-3 text-sm">
-              {/* CPU */}
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">CPU:</span>
-                <span className={`font-semibold ${server.cpu >= 90 ? 'text-red-600' : server.cpu >= 75 ? 'text-yellow-600' : 'text-green-600'}`}>
-                  {server.cpu}%
-                </span>
-              </div>
-              {/* Memory */}
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Memory:</span>
-                <span className={`font-semibold ${server.ram >= 90 ? 'text-red-600' : server.ram >= 75 ? 'text-yellow-600' : 'text-green-600'}`}>
-                  {server.ram}%
-                </span>
-              </div>
-              {/* Disk */}
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Disk:</span>
-                <span className={`font-semibold ${server.disk >= 90 ? 'text-red-600' : server.disk >= 75 ? 'text-yellow-600' : 'text-green-600'}`}>
-                  {server.disk}%
-                </span>
-              </div>
-              {/* Database Status */}
-              <div className="flex items-center justify-between">
-                <span className="text-gray-600 dark:text-gray-400">Database:</span>
-                <span className={`font-semibold flex items-center gap-1 ${
-                  server.services?.mysql?.status === 'up' || 
-                  server.services?.postgresql?.status === 'up' || 
-                  server.services?.mongodb?.status === 'up' 
-                    ? 'text-green-600' 
-                    : 'text-red-600'
-                }`}>
-                  <div className={`w-2 h-2 rounded-full ${
-                    server.services?.mysql?.status === 'up' || 
-                    server.services?.postgresql?.status === 'up' || 
-                    server.services?.mongodb?.status === 'up' 
-                      ? 'bg-green-500' 
-                      : 'bg-red-500'
-                  }`} />
-                  {server.services?.mysql?.status === 'up' || 
-                   server.services?.postgresql?.status === 'up' || 
-                   server.services?.mongodb?.status === 'up' 
-                    ? 'UP' 
-                    : 'DOWN'}
-                </span>
-              </div>
-            </div>
-          </div>
-        )}
-
         {/* CPU */}
         <div>
           <div className="flex items-center justify-between mb-1">
