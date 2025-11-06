@@ -49,9 +49,8 @@ export default function DashboardPage() {
       let filteredServers = summary.servers;
       if (user?.role === 'user' && user?.assignedServers && user.assignedServers.length > 0) {
         // Users can only see their assigned servers
-        const assignedServers = user.assignedServers;
         filteredServers = summary.servers.filter(server => 
-          assignedServers.includes(server.ip)
+          user.assignedServers.includes(server.ip)
         );
       }
       // Admins can see all servers, no filtering needed

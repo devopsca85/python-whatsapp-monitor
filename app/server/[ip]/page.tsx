@@ -267,7 +267,7 @@ export default function ServerDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Websites */}
           <div className="lg:col-span-2">
-            <WebsiteMonitor websites={serverDetails.websites as any} />
+            <WebsiteMonitor websites={serverDetails.websites || []} />
           </div>
 
           {/* Sidebar */}
@@ -430,79 +430,87 @@ export default function ServerDetailsPage() {
                   </>
                 )}
               </div>
+            </div>
+
           </div>
-      </div>
+        </div>
 
         {/* System Metrics */}
         {serverDetails.system && (
           <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* CPU */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
             {/* CPU */}
             {serverDetails.system.cpu && (
               <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <Cpu className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <Cpu className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
+                  </div>
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {serverDetails.system.cpu.current || 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className="bg-blue-600 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${serverDetails.system.cpu.current || 0}%` }}
+                  ></div>
+                </div>
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  {serverDetails.system.cpu.cores || 0} cores {serverDetails.system.cpu.load && serverDetails.system.cpu.load.length > 0 && `• Load: ${serverDetails.system.cpu.load.join(', ')}`}
+                </div>
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {serverDetails.system.cpu.current || 0}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-              <div
-                className="bg-blue-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${serverDetails.system.cpu.current || 0}%` }}
-              ></div>
-            </div>
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {serverDetails.system.cpu.cores} cores • Load: {serverDetails.system.cpu.load && serverDetails.system.cpu.load.length > 0 ? serverDetails.system.cpu.load.join(\', \') : \'N/A\'}
-            </div>
-          </div>
+            )}
 
-          {/* Memory */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <MemoryStick className="w-5 h-5 text-green-600" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
+            {/* Memory */}
+            {serverDetails.system.memory && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <MemoryStick className="w-5 h-5 text-green-600" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
+                  </div>
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {serverDetails.system.memory.current || 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className="bg-green-600 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${serverDetails.system.memory.current || 0}%` }}
+                  ></div>
+                </div>
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  {formatBytes(serverDetails.system.memory.used || 0)} / {formatBytes(serverDetails.system.memory.total || 0)} used
+                </div>
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {serverDetails.system.memory.current || 0}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-              <div
-                className="bg-green-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${serverDetails.system.memory.current || 0}%` }}
-              ></div>
-            </div>
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {formatBytes(serverDetails.system.memory.used || 0)} / {formatBytes(serverDetails.system.memory.total || 0)} used
-            </div>
-          </div>
+            )}
 
-          {/* Disk */}
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center space-x-2">
-                <HardDrive className="w-5 h-5 text-purple-600" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
+            {/* Disk */}
+            {serverDetails.system.disk && (
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center space-x-2">
+                    <HardDrive className="w-5 h-5 text-purple-600" />
+                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
+                  </div>
+                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {serverDetails.system.disk.current || 0}%
+                  </span>
+                </div>
+                <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
+                  <div
+                    className="bg-purple-600 h-3 rounded-full transition-all duration-300"
+                    style={{ width: `${serverDetails.system.disk.current || 0}%` }}
+                  ></div>
+                </div>
+                <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+                  {formatBytes(serverDetails.system.disk.used || 0)} / {formatBytes(serverDetails.system.disk.total || 0)} used
+                </div>
               </div>
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                {serverDetails.system.disk.current || 0}%
-              </span>
-            </div>
-            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-              <div
-                className="bg-purple-600 h-3 rounded-full transition-all duration-300"
-                style={{ width: `${serverDetails.system.disk.current || 0}%` }}
-              ></div>
-            </div>
-            <div className="mt-2 text-sm text-gray-600 dark:text-gray-400">
-              {formatBytes(serverDetails.system.disk.used || 0)} / {formatBytes(serverDetails.system.disk.total || 0)} used
-            </div>
+            )}
           </div>
-        </div>
+        )}
       </div>
     </div>
   );
