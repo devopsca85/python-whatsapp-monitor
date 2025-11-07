@@ -11,7 +11,7 @@ export interface ServerStatus {
   lastCheck: string;
   uptime?: string;
   websites?: WebsiteStatus[];
-  serverType?: 'ubuntu' | 'windows';
+  serverType?: 'new-staging' | 'windows' | 'old-staging';
   sqlJobs?: {
     total: number;
     running: number;

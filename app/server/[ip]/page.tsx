@@ -12,7 +12,7 @@ interface ServerDetails {
   ip: string;
   name?: string;
   status: 'up' | 'down' | 'slow';
-  serverType?: 'ubuntu' | 'windows';
+  serverType?: 'new-staging' | 'windows' | 'old-staging';
   system: {
     cpu: {
       current: number;

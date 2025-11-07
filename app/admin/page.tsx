@@ -65,7 +65,7 @@ export default function AdminPage() {
   const fetchServers = async () => {
     // Hardcoded servers for now (can be fetched from API later)
     setServers([
-      { ip: '192.168.1.19', name: 'Ubuntu Server 1' },
+      { ip: '147.135.116.243', name: 'New Staging Server' },
       { ip: '192.168.1.116', name: 'Windows Server' },
       { ip: '135.148.164.94', name: 'Old Staging Server' }
     ]);

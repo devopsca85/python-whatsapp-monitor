@@ -61,7 +61,11 @@ export function ServerCard({ server }: ServerCardProps) {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-semibold text-sm sm:text-base text-gray-900 dark:text-white truncate">
-              {server.ip === '135.148.164.94' ? 'Old Staging Server' : ((server as any).name || server.ip)}
+              {server.ip === '135.148.164.94'
+                ? 'Old Staging Server'
+                : server.ip === '147.135.116.243'
+                  ? 'New Staging Server'
+                  : ((server as any).name || server.ip)}
             </h3>
             <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
               {server.ip}

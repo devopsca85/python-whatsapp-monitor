@@ -8,9 +8,15 @@ class MonitoringAPI {
   constructor() {
     // Configure multiple servers
     const servers = {
-      'ubuntu': {
-        url: process.env.NEXT_PUBLIC_API_URL_UBUNTU || 'http://192.168.1.19:5000/api',
-        token: process.env.NEXT_PUBLIC_API_TOKEN_UBUNTU || 'mL0OIR28R1UL9Y2miGenl3i6JQxAemjl'
+      'new-staging': {
+        url:
+          process.env.NEXT_PUBLIC_API_URL_NEW_STAGING ||
+          process.env.API_ENDPOINT_147_135_116_243 ||
+          'https://147.135.116.243:5000/api',
+        token:
+          process.env.NEXT_PUBLIC_API_TOKEN_NEW_STAGING ||
+          process.env.API_TOKEN_147_135_116_243 ||
+          'new_staging_default_token'
       },
       'windows': {
         url: process.env.NEXT_PUBLIC_API_URL_WINDOWS || 'http://192.168.1.116:5000/api',
@@ -100,8 +106,8 @@ class MonitoringAPI {
                     server.serverType = serverName;
                     // Add friendly names if not present
                     if (!server.name) {
-                      if (serverName === 'ubuntu') {
-                        server.name = server.ip === '192.168.1.19' ? 'Ubuntu Server 1' : 'Ubuntu Server 2';
+                      if (serverName === 'new-staging') {
+                        server.name = 'New Staging Server';
                       } else if (serverName === 'windows') {
                         server.name = 'Windows Server';
                       } else if (serverName === 'old-staging') {
@@ -197,9 +203,9 @@ class MonitoringAPI {
             let offlineIp = 'unknown';
             let offlineName = 'Unknown Server';
             
-            if (serverName === 'ubuntu') {
-              offlineIp = '192.168.1.19';
-              offlineName = 'Ubuntu Server';
+            if (serverName === 'new-staging') {
+              offlineIp = '147.135.116.243';
+              offlineName = 'New Staging Server';
             } else if (serverName === 'windows') {
               offlineIp = '192.168.1.116';
               offlineName = 'Windows Server';
@@ -305,13 +311,13 @@ class MonitoringAPI {
 
   async getConfig(): Promise<MonitoringConfig> {
     try {
-      // Try to get config from Ubuntu server first
-      const ubuntuClient = this.clients.get('ubuntu');
-      if (ubuntuClient) {
-        const response = await ubuntuClient.get('/dashboard/config');
+      // Try to get config from the new staging server first
+      const newStagingClient = this.clients.get('new-staging');
+      if (newStagingClient) {
+        const response = await newStagingClient.get('/dashboard/config');
         return response.data;
       }
-      throw new Error('No Ubuntu client available');
+      throw new Error('No new-staging client available');
     } catch (error: any) {
       const safeError = String(error?.message || error?.code || error || 'Unknown error');
       console.error('Error fetching config:', safeError);
@@ -321,13 +327,13 @@ class MonitoringAPI {
 
   async updateConfig(config: Partial<MonitoringConfig>): Promise<{ status: string }> {
     try {
-      // Try to update config on Ubuntu server first
-      const ubuntuClient = this.clients.get('ubuntu');
-      if (ubuntuClient) {
-        const response = await ubuntuClient.post('/dashboard/config', config);
+      // Try to update config on the new staging server first
+      const newStagingClient = this.clients.get('new-staging');
+      if (newStagingClient) {
+        const response = await newStagingClient.post('/dashboard/config', config);
         return response.data;
       }
-      throw new Error('No Ubuntu client available');
+      throw new Error('No new-staging client available');
     } catch (error: any) {
       const safeError = String(error?.message || error?.code || error || 'Unknown error');
       console.error('Error updating config:', safeError);
@@ -337,9 +343,9 @@ class MonitoringAPI {
 
   async getPerformanceData(server: string, hours = 24): Promise<PerformanceData> {
     try {
-      let serverName = 'ubuntu'; // default
-      if (server === '192.168.1.19') {
-        serverName = 'ubuntu';
+      let serverName = 'new-staging'; // default
+      if (server === '147.135.116.243') {
+        serverName = 'new-staging';
       } else if (server === '192.168.1.116') {
         serverName = 'windows';
       } else if (server === '135.148.164.94') {
@@ -365,13 +371,13 @@ class MonitoringAPI {
 
   async testConnection(target: { type: 'server' | 'database' | 'website'; address: string }) {
     try {
-      // Try Ubuntu server first
-      const ubuntuClient = this.clients.get('ubuntu');
-      if (ubuntuClient) {
-        const response = await ubuntuClient.post('/dashboard/test-connection', target);
+      // Try new staging server first
+      const newStagingClient = this.clients.get('new-staging');
+      if (newStagingClient) {
+        const response = await newStagingClient.post('/dashboard/test-connection', target);
         return response.data;
       }
-      throw new Error('No Ubuntu client available');
+      throw new Error('No new-staging client available');
     } catch (error: any) {
       const safeError = String(error?.message || error?.code || error || 'Unknown error');
       console.error('Error testing connection:', safeError);
@@ -381,13 +387,13 @@ class MonitoringAPI {
 
   async sendTestAlert(message: string) {
     try {
-      // Try Ubuntu server first
-      const ubuntuClient = this.clients.get('ubuntu');
-      if (ubuntuClient) {
-        const response = await ubuntuClient.post('/dashboard/test-alert', { message });
+      // Try new staging server first
+      const newStagingClient = this.clients.get('new-staging');
+      if (newStagingClient) {
+        const response = await newStagingClient.post('/dashboard/test-alert', { message });
         return response.data;
       }
-      throw new Error('No Ubuntu client available');
+      throw new Error('No new-staging client available');
     } catch (error: any) {
       const safeError = String(error?.message || error?.code || error || 'Unknown error');
       console.error('Error sending test alert:', safeError);
@@ -398,8 +404,8 @@ class MonitoringAPI {
   async getServerDetails(serverIp: string) {
     try {
       // Determine which server to query based on IP
-      let serverName = 'ubuntu';
-      if (serverIp === '192.168.1.19') serverName = 'ubuntu';
+      let serverName = 'new-staging';
+      if (serverIp === '147.135.116.243') serverName = 'new-staging';
       else if (serverIp === '192.168.1.116') serverName = 'windows';
       else if (serverIp === '135.148.164.94') serverName = 'old-staging';
 
@@ -444,7 +450,7 @@ class MonitoringAPI {
       // Graceful fallback to avoid unhandled errors in UI
       return {
         ip: serverIp,
-        name: serverName === 'old-staging' ? 'Old Staging Server' : serverName === 'windows' ? 'Windows Server' : 'Ubuntu Server',
+        name: serverName === 'old-staging' ? 'Old Staging Server' : serverName === 'windows' ? 'Windows Server' : 'New Staging Server',
         status: 'down',
         serverType: serverName,
         cpu: 0,
@@ -474,9 +480,9 @@ class MonitoringAPI {
   // Server health check (existing endpoint)
   async checkServerHealth(server: string): Promise<{ status: string; timestamp: string }> {
     try {
-      let serverName = 'ubuntu'; // default
-      if (server === '192.168.1.19') {
-        serverName = 'ubuntu';
+      let serverName = 'new-staging'; // default
+      if (server === '147.135.116.243') {
+        serverName = 'new-staging';
       } else if (server === '192.168.1.116') {
         serverName = 'windows';
       } else if (server === '135.148.164.94') {
@@ -501,13 +507,13 @@ class MonitoringAPI {
   // System metrics (existing endpoint)
   async getSystemMetrics(): Promise<any> {
     try {
-      // Try Ubuntu server first
-      const ubuntuClient = this.clients.get('ubuntu');
-      if (ubuntuClient) {
-        const response = await ubuntuClient.get('/system');
+      // Try new staging server first
+      const newStagingClient = this.clients.get('new-staging');
+      if (newStagingClient) {
+        const response = await newStagingClient.get('/system');
         return response.data;
       }
-      throw new Error('No Ubuntu client available');
+      throw new Error('No new-staging client available');
     } catch (error: any) {
       const safeError = String(error?.message || error?.code || error || 'Unknown error');
       console.error('Error fetching system metrics:', safeError);
@@ -530,7 +536,7 @@ class MonitoringAPI {
           responseTime: 120
         },
         {
-          ip: '192.168.1.19',
+          ip: '147.135.116.243',
           status: 'slow',
           cpu: 85,
           ram: 92,
@@ -572,7 +578,7 @@ class MonitoringAPI {
         severity: 'medium',
         category: 'server',
         message: 'High CPU usage detected',
-        server: '192.168.1.19',
+        server: '147.135.116.243',
         timestamp: new Date(Date.now() - 1000 * 60 * 15).toISOString()
       },
       {
