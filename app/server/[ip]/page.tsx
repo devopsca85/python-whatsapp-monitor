@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { ArrowLeft, Server, Database, Globe, AlertTriangle, CheckCircle, XCircle, Activity, HardDrive, Cpu, MemoryStick } from 'lucide-react';
 import { WebsiteMonitor } from '@/components/WebsiteMonitor';
+import type { WebsiteStatus } from '@/types/monitoring';
 
 interface ServerDetails {
   ip: string;
@@ -66,7 +67,7 @@ interface ServerDetails {
   };
   websites: Array<{
     url: string;
-    status: string;
+    status: 'up' | 'down' | 'slow' | 'unknown';
     responseTime: number;
     statusCode?: number;
     lastCheck: string;
@@ -201,35 +202,35 @@ export default function ServerDetailsPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-6 sm:px-8 lg:px-10">
-          <div className="flex items-center justify-between py-6 min-h-[100px]">
-            <div className="flex items-center space-x-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between py-4 sm:py-6 gap-4">
+            <div className="flex items-center space-x-3 sm:space-x-4 lg:space-x-6 w-full sm:w-auto">
               <button
                 onClick={() => router.back()}
-                className="p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="p-2 sm:p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
               >
-                <ArrowLeft className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-gray-600 dark:text-gray-400" />
               </button>
               <img 
                 src="/company-logo.svg" 
                 alt="Company Logo" 
-                className="h-10 w-auto"
+                className="h-8 sm:h-10 w-auto"
               />
-              <div className="border-l border-gray-300 dark:border-gray-600 pl-5 h-16 flex items-center">
-                <div className="flex items-center space-x-5">
-                  <div className="p-4 rounded-lg bg-blue-100 dark:bg-blue-900 min-w-[64px] min-h-[64px] flex items-center justify-center">
-                    <Server className="w-8 h-8 text-blue-600" />
+              <div className="border-l border-gray-300 dark:border-gray-600 pl-3 sm:pl-4 lg:pl-5 h-auto sm:h-16 flex items-center flex-1 min-w-0">
+                <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-5 w-full">
+                  <div className="p-2 sm:p-3 lg:p-4 rounded-lg bg-blue-100 dark:bg-blue-900 min-w-[48px] sm:min-w-[56px] lg:min-w-[64px] min-h-[48px] sm:min-h-[56px] lg:min-h-[64px] flex items-center justify-center flex-shrink-0">
+                    <Server className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-blue-600" />
                   </div>
-                  <div className="flex flex-col justify-center space-y-1.5">
-                    <h1 className="text-xl font-semibold text-gray-900 dark:text-white leading-tight">
+                  <div className="flex flex-col justify-center space-y-1 min-w-0 flex-1">
+                    <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white leading-tight truncate">
                       {serverDetails.name || `Server ${serverDetails.ip}`}
                     </h1>
-                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                    <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                       {serverDetails.ip}
                     </p>
                     <div className="flex items-center space-x-2">
                       {getStatusIcon(serverDetails.status)}
-                      <span className={`px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(serverDetails.status)} min-w-[50px] text-center`}>
+                      <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium ${getStatusColor(serverDetails.status)} min-w-[50px] text-center`}>
                         {serverDetails.status.toUpperCase()}
                       </span>
                     </div>
@@ -238,8 +239,8 @@ export default function ServerDetailsPage() {
               </div>
             </div>
             
-            <div className="flex items-center space-x-5">
-              <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2 sm:space-x-3 lg:space-x-5 w-full sm:w-auto justify-end">
+              <div className="flex items-center space-x-2 sm:space-x-3">
                 <input
                   type="checkbox"
                   id="auto-refresh"
@@ -247,13 +248,13 @@ export default function ServerDetailsPage() {
                   onChange={(e) => setAutoRefresh(e.target.checked)}
                   className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <label htmlFor="auto-refresh" className="text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
+                <label htmlFor="auto-refresh" className="text-xs sm:text-sm text-gray-600 dark:text-gray-400 whitespace-nowrap">
                   Auto-refresh
                 </label>
               </div>
               <button
                 onClick={fetchServerDetails}
-                className="px-6 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium whitespace-nowrap"
+                className="px-4 sm:px-5 lg:px-6 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-xs sm:text-sm font-medium whitespace-nowrap"
               >
                 Refresh
               </button>
@@ -263,19 +264,19 @@ export default function ServerDetailsPage() {
       </div>
 
       {/* Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
           {/* Websites */}
-          <div className="lg:col-span-2">
-            <WebsiteMonitor websites={serverDetails.websites || []} />
+          <div className="lg:col-span-2 order-2 lg:order-1">
+            <WebsiteMonitor websites={(serverDetails.websites || []) as WebsiteStatus[]} />
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
             {/* System Info */}
             {serverDetails.system && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">System Information</h3>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white mb-3 sm:mb-4">System Information</h3>
                 <div className="space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600 dark:text-gray-400">Uptime:</span>
@@ -302,10 +303,10 @@ export default function ServerDetailsPage() {
             )}
 
             {/* Services Status */}
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-              <div className="flex items-center space-x-2 mb-4">
-                <Database className="w-5 h-5 text-blue-600" />
-                <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Services</h3>
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+              <div className="flex items-center space-x-2 mb-3 sm:mb-4">
+                <Database className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Services</h3>
               </div>
               <div className="space-y-3">
                 {/* Show MSSQL for Windows, others for Ubuntu */}
@@ -437,16 +438,16 @@ export default function ServerDetailsPage() {
 
         {/* System Metrics */}
         {serverDetails.system && (
-          <div className="mt-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="mt-6 sm:mt-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {/* CPU */}
             {serverDetails.system.cpu && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center space-x-2">
-                    <Cpu className="w-5 h-5 text-blue-600" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
+                    <Cpu className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">CPU Usage</h3>
                   </div>
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {serverDetails.system.cpu.current || 0}%
                   </span>
                 </div>
@@ -464,13 +465,13 @@ export default function ServerDetailsPage() {
 
             {/* Memory */}
             {serverDetails.system.memory && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center space-x-2">
-                    <MemoryStick className="w-5 h-5 text-green-600" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
+                    <MemoryStick className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Memory Usage</h3>
                   </div>
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {serverDetails.system.memory.current || 0}%
                   </span>
                 </div>
@@ -488,13 +489,13 @@ export default function ServerDetailsPage() {
 
             {/* Disk */}
             {serverDetails.system.disk && (
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
-                <div className="flex items-center justify-between mb-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
                   <div className="flex items-center space-x-2">
-                    <HardDrive className="w-5 h-5 text-purple-600" />
-                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
+                    <HardDrive className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
+                    <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">Disk Usage</h3>
                   </div>
-                  <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                  <span className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
                     {serverDetails.system.disk.current || 0}%
                   </span>
                 </div>

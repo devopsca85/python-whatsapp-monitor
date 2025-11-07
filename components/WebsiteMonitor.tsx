@@ -41,36 +41,36 @@ export function WebsiteMonitor({ websites }: WebsiteMonitorProps) {
   };
 
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 border border-gray-200 dark:border-gray-700">
-      <div className="flex items-center gap-2 mb-2">
-        <Globe className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-        <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Websites</h2>
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-3 sm:p-4 lg:p-6 border border-gray-200 dark:border-gray-700">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <Globe className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 dark:text-purple-400" />
+        <h2 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-white">Websites</h2>
       </div>
 
-      <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+      <div className="space-y-2 sm:space-y-3 max-h-[400px] overflow-y-auto pr-1 sm:pr-2 custom-scrollbar">
         {websitesList.map((site, index) => (
           <div
             key={site.url || `website-${index}`}
-            className="flex items-center justify-between p-2 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+            className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-2 sm:p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors gap-2"
           >
-            <div className="flex-1">
-              <div className="flex items-center gap-2 mb-0.5">
-                <h3 className="font-medium text-gray-900 dark:text-white truncate">{site.url || 'Unknown URL'}</h3>
-                <span className={`px-1.5 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(site.status || 'unknown')}`}>
+            <div className="flex-1 min-w-0 w-full sm:w-auto">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mb-1">
+                <h3 className="font-medium text-sm sm:text-base text-gray-900 dark:text-white truncate flex-1 min-w-0">{site.url || 'Unknown URL'}</h3>
+                <span className={`px-1.5 sm:px-2 py-0.5 rounded-full text-xs font-semibold ${getStatusBadge(site.status || 'unknown')} whitespace-nowrap`}>
                   {(site.status || 'unknown').toUpperCase()}
                 </span>
                 {site.statusCode && (
-                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                  <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
                     HTTP {site.statusCode}
                   </span>
                 )}
               </div>
               
-              <div className="flex items-center gap-3 text-sm">
+              <div className="flex flex-wrap items-center gap-2 sm:gap-3 text-xs sm:text-sm">
                 {(site.status === 'up' || site.status === 'slow') ? (
                   <>
                     <div className="flex items-center gap-1">
-                      <Clock className="w-4 h-4 text-gray-500" />
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-gray-500" />
                       <span className={getResponseTimeColor(site.responseTime || 0)}>
                         {site.responseTime || 0}ms
                       </span>
@@ -80,18 +80,20 @@ export function WebsiteMonitor({ websites }: WebsiteMonitorProps) {
                     </span>
                   </>
                 ) : (
-                  <span className="text-red-500 dark:text-red-400 text-sm">
+                  <span className="text-red-500 dark:text-red-400">
                     {site.error || 'Connection failed'}
                   </span>
                 )}
               </div>
             </div>
 
-            {site.status === 'up' ? (
-              <CheckCircle className={`w-5 h-5 ${getStatusColor(site.status || 'unknown')}`} />
-            ) : (
-              <XCircle className={`w-5 h-5 ${getStatusColor(site.status || 'unknown')}`} />
-            )}
+            <div className="flex-shrink-0 self-start sm:self-auto">
+              {site.status === 'up' ? (
+                <CheckCircle className={`w-4 h-4 sm:w-5 sm:h-5 ${getStatusColor(site.status || 'unknown')}`} />
+              ) : (
+                <XCircle className={`w-4 h-4 sm:w-5 sm:h-5 ${getStatusColor(site.status || 'unknown')}`} />
+              )}
+            </div>
           </div>
         ))}
 

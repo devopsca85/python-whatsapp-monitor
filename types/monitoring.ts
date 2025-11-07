@@ -39,7 +39,7 @@ export interface DatabaseStatus {
 
 export interface WebsiteStatus {
   url: string;
-  status: 'up' | 'down' | 'slow';
+  status: 'up' | 'down' | 'slow' | 'unknown';
   responseTime: number;
   lastCheck: string;
   statusCode?: number;

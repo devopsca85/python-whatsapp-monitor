@@ -50,7 +50,7 @@ export default function DashboardPage() {
       if (user?.role === 'user' && user?.assignedServers && user.assignedServers.length > 0) {
         // Users can only see their assigned servers
         filteredServers = summary.servers.filter(server => 
-          user.assignedServers.includes(server.ip)
+          user.assignedServers!.includes(server.ip)
         );
       }
       // Admins can see all servers, no filtering needed
@@ -130,25 +130,25 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
       {/* Header */}
       <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <img 
                 src="/company-logo.svg" 
                 alt="Company Logo" 
-                className="h-12 w-auto"
+                className="h-8 sm:h-12 w-auto"
               />
-              <div className="border-l border-gray-300 dark:border-gray-600 pl-4 h-12 flex flex-col justify-center">
-                <h1 className="text-3xl font-bold text-gray-900 dark:text-white leading-tight">
+              <div className="border-l-0 sm:border-l border-gray-300 dark:border-gray-600 pl-0 sm:pl-4 h-auto sm:h-12 flex flex-col justify-center">
+                <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white leading-tight">
                   Orion Monitoring Dashboard
                 </h1>
-                <p className="text-gray-600 dark:text-gray-400 text-sm">
+                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mt-1">
                   Last updated: {lastUpdate.toLocaleTimeString()}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-4">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 w-full sm:w-auto justify-end">
               <label className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="checkbox"
@@ -156,20 +156,20 @@ export default function DashboardPage() {
                   onChange={(e) => setAutoRefresh(e.target.checked)}
                   className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500"
                 />
-                <span className="text-sm text-gray-700 dark:text-gray-300">Auto-refresh</span>
+                <span className="text-xs sm:text-sm text-gray-700 dark:text-gray-300 whitespace-nowrap">Auto-refresh</span>
               </label>
               
               <button
                 onClick={fetchDashboardData}
                 disabled={loading}
-                className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 px-3 sm:px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 text-sm"
               >
                 <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                Refresh
+                <span className="hidden sm:inline">Refresh</span>
               </button>
 
               {/* User Menu Dropdown */}
-              <div className="relative pl-4 border-l border-gray-300 dark:border-gray-600" ref={userMenuRef}>
+              <div className="relative pl-2 sm:pl-4 border-l border-gray-300 dark:border-gray-600" ref={userMenuRef}>
                 {/* 3-Dot Menu Button */}
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
@@ -227,9 +227,9 @@ export default function DashboardPage() {
       </div>
 
       {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6 lg:py-8">
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
           <StatsCard
             title="Total Servers"
             value={data?.stats.totalServers || 0}
@@ -257,9 +257,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Servers Grid */}
-        <div className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">Servers</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="mb-6 sm:mb-8">
+          <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-4">Servers</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
             {data?.servers.map((server) => (
               <ServerCard key={server.ip} server={server} />
             ))}
