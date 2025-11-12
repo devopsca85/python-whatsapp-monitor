@@ -5,6 +5,34 @@ class MonitoringAPI {
   private clients: Map<string, AxiosInstance> = new Map();
   private tokens: Map<string, string> = new Map();
 
+  /**
+   * Normalize service status to only 'up' or 'down'
+   */
+  private normalizeServiceStatus(status: string | undefined | null): 'up' | 'down' {
+    return status === 'up' ? 'up' : 'down';
+  }
+
+  /**
+   * Normalize service statuses in server data
+   */
+  private normalizeServerServices(server: any): any {
+    if (server.services) {
+      Object.keys(server.services).forEach((key) => {
+        if (server.services[key] && server.services[key].status) {
+          server.services[key].status = this.normalizeServiceStatus(server.services[key].status);
+        }
+      });
+    }
+    if (server.databases) {
+      Object.keys(server.databases).forEach((key) => {
+        if (server.databases[key] && server.databases[key].status) {
+          server.databases[key].status = this.normalizeServiceStatus(server.databases[key].status);
+        }
+      });
+    }
+    return server;
+  }
+
   constructor() {
     // Configure multiple servers
     const servers = {
@@ -12,7 +40,7 @@ class MonitoringAPI {
         url:
           process.env.NEXT_PUBLIC_API_URL_NEW_STAGING ||
           process.env.API_ENDPOINT_147_135_116_243 ||
-          'https://147.135.116.243:5000/api',
+          'https://newstaging147api.customerdemourl.com/api',
         token:
           process.env.NEXT_PUBLIC_API_TOKEN_NEW_STAGING ||
           process.env.API_TOKEN_147_135_116_243 ||
@@ -114,6 +142,8 @@ class MonitoringAPI {
                         server.name = 'Old Staging Server';
                       }
                     }
+                    // Normalize service statuses to only 'up' or 'down'
+                    this.normalizeServerServices(server);
                     allServers.push(server);
                   });
                 }
@@ -423,6 +453,8 @@ class MonitoringAPI {
           if (response.status >= 200 && response.status < 300) {
             const data = response.data;
             data.serverType = serverName;
+            // Normalize service statuses to only 'up' or 'down'
+            this.normalizeServerServices(data);
             return data;
           } else if (response.status === 401 || response.status === 403) {
             // Auth errors - don't retry
