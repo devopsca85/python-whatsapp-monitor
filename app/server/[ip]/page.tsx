@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
-import { ArrowLeft, Server, Database, Globe, AlertTriangle, CheckCircle, XCircle, Activity, HardDrive, Cpu, MemoryStick } from 'lucide-react';
+import { ArrowLeft, Server, Database, Globe, AlertTriangle, CheckCircle, XCircle, Activity, HardDrive, Cpu, MemoryStick, ChevronDown, ChevronUp } from 'lucide-react';
 import { WebsiteMonitor } from '@/components/WebsiteMonitor';
 import type { WebsiteStatus } from '@/types/monitoring';
 
@@ -45,9 +45,19 @@ interface ServerDetails {
       status: string;
       databases: Record<string, any>;
       lastCheck: string;
+      containers?: Array<{
+        name: string;
+        status: 'up' | 'down';
+        statusText: string;
+      }>;
     };
     mongodb?: {
       status: string;
+      containers?: Array<{
+        name: string;
+        status: 'up' | 'down';
+        statusText: string;
+      }>;
       databases: Record<string, any>;
       lastCheck: string;
     };
@@ -86,6 +96,7 @@ export default function ServerDetailsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [autoRefresh, setAutoRefresh] = useState(true);
+  const [expandedServices, setExpandedServices] = useState<{ [key: string]: boolean }>({});
 
   // Redirect to login if not authenticated
   useEffect(() => {
@@ -399,33 +410,95 @@ export default function ServerDetailsPage() {
                       </div>
                     )}
                     {serverDetails.databases?.postgresql && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">PostgreSQL:</span>
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(serverDetails.databases.postgresql.status)}
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            serverDetails.databases.postgresql.status?.toUpperCase() === 'UP' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          }`}>
-                            {serverDetails.databases.postgresql.status?.toUpperCase() || 'NOT AVAILABLE'}
-                          </span>
+                      <div>
+                        <div 
+                          className="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg p-2 -m-2 transition-colors"
+                          onClick={() => setExpandedServices(prev => ({ ...prev, postgresql: !prev.postgresql }))}
+                        >
+                          <span className="text-gray-600 dark:text-gray-400">PostgreSQL:</span>
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(serverDetails.databases.postgresql.status)}
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              serverDetails.databases.postgresql.status?.toUpperCase() === 'UP' 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}>
+                              {serverDetails.databases.postgresql.status?.toUpperCase() || 'NOT AVAILABLE'}
+                            </span>
+                            {serverDetails.databases.postgresql.containers && serverDetails.databases.postgresql.containers.length > 0 && (
+                              expandedServices.postgresql ? (
+                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                              )
+                            )}
+                          </div>
                         </div>
+                        {expandedServices.postgresql && serverDetails.databases.postgresql.containers && serverDetails.databases.postgresql.containers.length > 0 && (
+                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                            {serverDetails.databases.postgresql.containers.map((container, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
+                                <div className="flex items-center space-x-2">
+                                  {getStatusIcon(container.status)}
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                    container.status === 'up' 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  }`}>
+                                    {container.status.toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                     {serverDetails.databases?.mongodb && (
-                      <div className="flex items-center justify-between">
-                        <span className="text-gray-600 dark:text-gray-400">MongoDB:</span>
-                        <div className="flex items-center space-x-2">
-                          {getStatusIcon(serverDetails.databases.mongodb.status)}
-                          <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                            serverDetails.databases.mongodb.status?.toUpperCase() === 'UP' 
-                              ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                              : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                          }`}>
-                            {serverDetails.databases.mongodb.status?.toUpperCase() || 'NOT AVAILABLE'}
-                          </span>
+                      <div>
+                        <div 
+                          className="flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg p-2 -m-2 transition-colors"
+                          onClick={() => setExpandedServices(prev => ({ ...prev, mongodb: !prev.mongodb }))}
+                        >
+                          <span className="text-gray-600 dark:text-gray-400">MongoDB:</span>
+                          <div className="flex items-center space-x-2">
+                            {getStatusIcon(serverDetails.databases.mongodb.status)}
+                            <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                              serverDetails.databases.mongodb.status?.toUpperCase() === 'UP' 
+                                ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                            }`}>
+                              {serverDetails.databases.mongodb.status?.toUpperCase() || 'NOT AVAILABLE'}
+                            </span>
+                            {serverDetails.databases.mongodb.containers && serverDetails.databases.mongodb.containers.length > 0 && (
+                              expandedServices.mongodb ? (
+                                <ChevronUp className="w-4 h-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4 text-gray-500" />
+                              )
+                            )}
+                          </div>
                         </div>
+                        {expandedServices.mongodb && serverDetails.databases.mongodb.containers && serverDetails.databases.mongodb.containers.length > 0 && (
+                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                            {serverDetails.databases.mongodb.containers.map((container, idx) => (
+                              <div key={idx} className="flex items-center justify-between text-sm">
+                                <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
+                                <div className="flex items-center space-x-2">
+                                  {getStatusIcon(container.status)}
+                                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                    container.status === 'up' 
+                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+                                  }`}>
+                                    {container.status.toUpperCase()}
+                                  </span>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
