@@ -58,8 +58,8 @@ class MonitoringAPI {
 
     // Create clients for each server
     Object.entries(servers).forEach(([name, config]) => {
-      // Use longer timeout for staging server as it may be slower
-      const timeout = name === 'old-staging' ? 30000 : 15000; // 30s for staging, 15s for others
+      // Use longer timeout for staging servers as they may be slower
+      const timeout = (name === 'old-staging' || name === 'new-staging') ? 30000 : 15000; // 30s for staging, 15s for others
       
       const client = axios.create({
         baseURL: config.url,
@@ -114,13 +114,14 @@ class MonitoringAPI {
       for (const [serverName, client] of this.clients) {
         try {
           let retries = 0;
-          const maxRetries = serverName === 'old-staging' ? 3 : 1; // More retries for staging
+          // More retries for staging servers to handle intermittent issues
+          const maxRetries = (serverName === 'old-staging' || serverName === 'new-staging') ? 3 : 1;
           let success = false;
           
           while (retries <= maxRetries && !success) {
             try {
               const response = await client.get('/dashboard/summary', {
-                timeout: serverName === 'old-staging' ? 30000 : 15000,
+                timeout: (serverName === 'old-staging' || serverName === 'new-staging') ? 30000 : 15000,
                 validateStatus: () => true // Don't throw on HTTP errors
               });
               
@@ -163,8 +164,8 @@ class MonitoringAPI {
                 console.warn(safeError);
                 // Don't add offline server for auth errors - skip it entirely
                 break;
-              } else if (response.status >= 500 && serverName === 'old-staging') {
-                // For old-staging, retry on 5xx errors as they might be temporary
+              } else if (response.status >= 500 && (serverName === 'old-staging' || serverName === 'new-staging')) {
+                // For staging servers, retry on 5xx errors as they might be temporary
                 if (retries < maxRetries) {
                   retries++;
                   const delay = 2000 * retries;
@@ -202,12 +203,13 @@ class MonitoringAPI {
                 errorString.toLowerCase().includes('network error')
               );
               
-              // For old-staging server, be more lenient with retries
+              // For staging servers, be more lenient with retries
+              const isStaging = serverName === 'old-staging' || serverName === 'new-staging';
               const shouldRetry = retries < maxRetries && (isTimeout || isNetworkError);
               
               if (shouldRetry) {
                 retries++;
-                const delay = serverName === 'old-staging' ? 2000 * retries : 1000 * retries; // Longer delay for staging
+                const delay = isStaging ? 2000 * retries : 1000 * retries; // Longer delay for staging
                 console.warn(`Retry ${retries}/${maxRetries} for ${serverName} due to ${isTimeout ? 'timeout' : 'network error'}: ${errorMessage}`);
                 await new Promise(resolve => setTimeout(resolve, delay));
                 continue; // Try again
@@ -442,11 +444,12 @@ class MonitoringAPI {
       const client = this.clients.get(serverName);
       if (!client) throw new Error(`No client configured for server: ${serverName}`);
 
-      let retries = serverName === 'old-staging' ? 3 : 1;
+      const isStaging = serverName === 'old-staging' || serverName === 'new-staging';
+      let retries = isStaging ? 3 : 1;
       while (retries >= 0) {
         try {
           const response = await client.get(`/dashboard/server/${serverIp}` as const, {
-            timeout: serverName === 'old-staging' ? 30000 : 15000,
+            timeout: isStaging ? 30000 : 15000,
             validateStatus: () => true,
           });
 
@@ -460,8 +463,8 @@ class MonitoringAPI {
             // Auth errors - don't retry
             console.error(`Authentication failed for ${serverName}: ${response.status}`);
             break;
-          } else if (response.status >= 500 && serverName === 'old-staging' && retries > 0) {
-            // Retry on 5xx errors for old-staging
+          } else if (response.status >= 500 && isStaging && retries > 0) {
+            // Retry on 5xx errors for staging servers
             await new Promise(r => setTimeout(r, 2000 * (3 - retries)));
             retries -= 1;
             continue;
@@ -471,7 +474,7 @@ class MonitoringAPI {
           const msg = String(err?.message || '').toLowerCase();
           const isNetwork = !err?.response && (code.includes('econn') || code.includes('network') || msg.includes('timeout') || msg.includes('failed to fetch') || code.includes('etimedout') || code.includes('econnreset'));
           if (retries > 0 && isNetwork) {
-            await new Promise(r => setTimeout(r, serverName === 'old-staging' ? 2000 * (3 - retries) : 1000));
+            await new Promise(r => setTimeout(r, isStaging ? 2000 * (3 - retries) : 1000));
             retries -= 1;
             continue;
           }
