@@ -438,7 +438,7 @@ export default function ServerDetailsPage() {
                           </div>
                         </div>
                         {expandedServices.postgresql && serverDetails.databases.postgresql.containers && serverDetails.databases.postgresql.containers.length > 0 && (
-                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4 max-h-64 overflow-y-auto pr-2">
                             {serverDetails.databases.postgresql.containers.map((container, idx) => {
                               const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
                               return (
@@ -492,7 +492,7 @@ export default function ServerDetailsPage() {
                           </div>
                         </div>
                         {expandedServices.mongodb && serverDetails.databases.mongodb.containers && serverDetails.databases.mongodb.containers.length > 0 && (
-                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
+                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4 max-h-64 overflow-y-auto pr-2">
                             {serverDetails.databases.mongodb.containers.map((container, idx) => {
                               const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
                               return (
