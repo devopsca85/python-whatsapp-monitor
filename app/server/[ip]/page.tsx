@@ -237,7 +237,7 @@ export default function ServerDetailsPage() {
                   </div>
                   <div className="flex flex-col justify-center space-y-1 min-w-0 flex-1">
                     <h1 className="text-base sm:text-lg lg:text-xl font-semibold text-gray-900 dark:text-white leading-tight truncate">
-                      {serverDetails.name || (serverDetails.ip === '147.135.116.243' ? 'New Staging Server' : serverDetails.ip === '135.148.164.94' ? 'Old Staging Server' : `Server ${serverDetails.ip}`)}
+                      {serverDetails.ip === '147.135.116.243' ? 'New Staging Server' : serverDetails.ip === '135.148.164.94' ? 'Old Staging Server' : (serverDetails.name || `Server ${serverDetails.ip}`)}
                     </h1>
                     <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">
                       {serverDetails.ip}
