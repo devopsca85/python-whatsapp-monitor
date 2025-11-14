@@ -19,17 +19,17 @@ export interface ServerStatus {
     succeeded: number;
   };
   services?: {
-    mysql?: { status: 'up' | 'down' | 'error'; databases: number; tables: number };
-    postgresql?: { status: 'up' | 'down' | 'error'; databases: number; tables: number };
-    mongodb?: { status: 'up' | 'down' | 'error'; databases: number; collections: number };
-    mssql?: { status: 'up' | 'down' | 'error'; databases: number; tables: number };
+    mysql?: { status: 'up' | 'down'; databases: number; tables: number };
+    postgresql?: { status: 'up' | 'down'; databases: number; tables: number; containers?: Array<{ name: string; image: string; status: string; statusText: string }> };
+    mongodb?: { status: 'up' | 'down'; databases: number; collections: number; containers?: Array<{ name: string; image: string; status: string; statusText: string }> };
+    mssql?: { status: 'up' | 'down'; databases: number; tables: number };
   };
 }
 
 export interface DatabaseStatus {
   server: string;
   type: 'mysql' | 'postgresql' | 'mongodb';
-  status: 'up' | 'down' | 'error';
+  status: 'up' | 'down';
   databases: number;
   tables?: number;
   collections?: number;

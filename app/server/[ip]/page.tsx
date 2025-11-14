@@ -47,7 +47,8 @@ interface ServerDetails {
       lastCheck: string;
       containers?: Array<{
         name: string;
-        status: 'up' | 'down';
+        image: string;
+        status: string;
         statusText: string;
       }>;
     };
@@ -55,7 +56,8 @@ interface ServerDetails {
       status: string;
       containers?: Array<{
         name: string;
-        status: 'up' | 'down';
+        image: string;
+        status: string;
         statusText: string;
       }>;
       databases: Record<string, any>;
@@ -140,15 +142,16 @@ export default function ServerDetailsPage() {
   }, [autoRefresh, serverIp]);
 
   const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'up':
-        return <CheckCircle className="w-5 h-5 text-green-500" />;
-      case 'down':
-        return <XCircle className="w-5 h-5 text-red-500" />;
-      case 'slow':
-        return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
-      default:
-        return <XCircle className="w-5 h-5 text-gray-500" />;
+    const statusLower = status?.toLowerCase() || '';
+    if (statusLower === 'up' || statusLower.startsWith('up')) {
+      return <CheckCircle className="w-5 h-5 text-green-500" />;
+    } else if (statusLower === 'down') {
+      return <XCircle className="w-5 h-5 text-red-500" />;
+    } else if (statusLower === 'slow') {
+      return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
+    } else {
+      // For other statuses (like "Exited (0) 2 days ago"), show warning icon
+      return <AlertTriangle className="w-5 h-5 text-yellow-500" />;
     }
   };
 
@@ -436,21 +439,29 @@ export default function ServerDetailsPage() {
                         </div>
                         {expandedServices.postgresql && serverDetails.databases.postgresql.containers && serverDetails.databases.postgresql.containers.length > 0 && (
                           <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
-                            {serverDetails.databases.postgresql.containers.map((container, idx) => (
-                              <div key={idx} className="flex items-center justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
-                                <div className="flex items-center space-x-2">
-                                  {getStatusIcon(container.status)}
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                    container.status === 'up' 
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                  }`}>
-                                    {container.status.toUpperCase()}
-                                  </span>
+                            {serverDetails.databases.postgresql.containers.map((container, idx) => {
+                              const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
+                              return (
+                                <div key={idx} className="flex items-center justify-between text-sm">
+                                  <div className="flex flex-col">
+                                    <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
+                                    {container.image && (
+                                      <span className="text-gray-400 dark:text-gray-500 text-xs">{container.image}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {getStatusIcon(container.status)}
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                      isUp
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                    }`} title={container.statusText}>
+                                      {container.status}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
@@ -482,21 +493,29 @@ export default function ServerDetailsPage() {
                         </div>
                         {expandedServices.mongodb && serverDetails.databases.mongodb.containers && serverDetails.databases.mongodb.containers.length > 0 && (
                           <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4">
-                            {serverDetails.databases.mongodb.containers.map((container, idx) => (
-                              <div key={idx} className="flex items-center justify-between text-sm">
-                                <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
-                                <div className="flex items-center space-x-2">
-                                  {getStatusIcon(container.status)}
-                                  <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                    container.status === 'up' 
-                                      ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                      : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
-                                  }`}>
-                                    {container.status.toUpperCase()}
-                                  </span>
+                            {serverDetails.databases.mongodb.containers.map((container, idx) => {
+                              const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
+                              return (
+                                <div key={idx} className="flex items-center justify-between text-sm">
+                                  <div className="flex flex-col">
+                                    <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
+                                    {container.image && (
+                                      <span className="text-gray-400 dark:text-gray-500 text-xs">{container.image}</span>
+                                    )}
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {getStatusIcon(container.status)}
+                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
+                                      isUp
+                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
+                                    }`} title={container.statusText}>
+                                      {container.status}
+                                    </span>
+                                  </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                           </div>
                         )}
                       </div>
