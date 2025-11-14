@@ -438,30 +438,38 @@ export default function ServerDetailsPage() {
                           </div>
                         </div>
                         {expandedServices.postgresql && serverDetails.databases.postgresql.containers && serverDetails.databases.postgresql.containers.length > 0 && (
-                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                            {serverDetails.databases.postgresql.containers.map((container, idx) => {
-                              const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
-                              return (
-                                <div key={idx} className="flex items-center justify-between text-sm">
-                                  <div className="flex flex-col">
-                                    <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
-                                    {container.image && (
-                                      <span className="text-gray-400 dark:text-gray-500 text-xs">{container.image}</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {getStatusIcon(container.status)}
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                      isUp
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                    }`} title={container.statusText}>
-                                      {container.status}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="mt-3 ml-4 border-l-2 border-blue-200 dark:border-blue-800 pl-4 pr-2">
+                            <div className="max-h-72 overflow-y-auto overflow-x-hidden scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
+                              <div className="space-y-2.5 py-1">
+                                {serverDetails.databases.postgresql.containers.map((container, idx) => {
+                                  const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
+                                  return (
+                                    <div key={idx} className="flex items-start justify-between p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
+                                      <div className="flex flex-col flex-1 min-w-0 mr-3">
+                                        <span className="text-gray-700 dark:text-gray-300 font-medium text-sm mb-0.5 truncate" title={container.name}>
+                                          {container.name}
+                                        </span>
+                                        {container.image && (
+                                          <span className="text-gray-500 dark:text-gray-400 text-xs font-mono truncate" title={container.image}>
+                                            {container.image}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center space-x-2 flex-shrink-0">
+                                        {getStatusIcon(container.status)}
+                                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap shadow-sm ${
+                                          isUp
+                                            ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'
+                                        }`} title={container.statusText}>
+                                          {container.status}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
@@ -492,30 +500,38 @@ export default function ServerDetailsPage() {
                           </div>
                         </div>
                         {expandedServices.mongodb && serverDetails.databases.mongodb.containers && serverDetails.databases.mongodb.containers.length > 0 && (
-                          <div className="mt-2 ml-4 space-y-2 border-l-2 border-gray-200 dark:border-gray-700 pl-4 max-h-64 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-gray-300 dark:scrollbar-thumb-gray-600 scrollbar-track-transparent">
-                            {serverDetails.databases.mongodb.containers.map((container, idx) => {
-                              const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
-                              return (
-                                <div key={idx} className="flex items-center justify-between text-sm">
-                                  <div className="flex flex-col">
-                                    <span className="text-gray-500 dark:text-gray-400 font-mono text-xs">{container.name}</span>
-                                    {container.image && (
-                                      <span className="text-gray-400 dark:text-gray-500 text-xs">{container.image}</span>
-                                    )}
-                                  </div>
-                                  <div className="flex items-center space-x-2">
-                                    {getStatusIcon(container.status)}
-                                    <span className={`px-2 py-0.5 rounded-full text-xs font-semibold ${
-                                      isUp
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200'
-                                    }`} title={container.statusText}>
-                                      {container.status}
-                                    </span>
-                                  </div>
-                                </div>
-                              );
-                            })}
+                          <div className="mt-3 ml-4 border-l-2 border-blue-200 dark:border-blue-800 pl-4 pr-2">
+                            <div className="max-h-72 overflow-y-auto overflow-x-hidden scroll-smooth" style={{ scrollbarWidth: 'thin', scrollbarColor: '#cbd5e1 transparent' }}>
+                              <div className="space-y-2.5 py-1">
+                                {serverDetails.databases.mongodb.containers.map((container, idx) => {
+                                  const isUp = container.status === 'Up' || container.status?.toLowerCase() === 'up' || container.status?.toLowerCase().startsWith('up');
+                                  return (
+                                    <div key={idx} className="flex items-start justify-between p-2 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/30 transition-colors duration-150 border border-transparent hover:border-gray-200 dark:hover:border-gray-600">
+                                      <div className="flex flex-col flex-1 min-w-0 mr-3">
+                                        <span className="text-gray-700 dark:text-gray-300 font-medium text-sm mb-0.5 truncate" title={container.name}>
+                                          {container.name}
+                                        </span>
+                                        {container.image && (
+                                          <span className="text-gray-500 dark:text-gray-400 text-xs font-mono truncate" title={container.image}>
+                                            {container.image}
+                                          </span>
+                                        )}
+                                      </div>
+                                      <div className="flex items-center space-x-2 flex-shrink-0">
+                                        {getStatusIcon(container.status)}
+                                        <span className={`px-2.5 py-1 rounded-md text-xs font-semibold whitespace-nowrap shadow-sm ${
+                                          isUp
+                                            ? 'bg-green-50 text-green-700 border border-green-200 dark:bg-green-900/30 dark:text-green-300 dark:border-green-800'
+                                            : 'bg-yellow-50 text-yellow-700 border border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-300 dark:border-yellow-800'
+                                        }`} title={container.statusText}>
+                                          {container.status}
+                                        </span>
+                                      </div>
+                                    </div>
+                                  );
+                                })}
+                              </div>
+                            </div>
                           </div>
                         )}
                       </div>
