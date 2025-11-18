@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Server, Database as DatabaseIcon, Globe, AlertTriangle, RefreshCw, LogOut, User, Shield, MoreVertical } from 'lucide-react';
 import { ServerCard } from '@/components/ServerCard';
@@ -39,13 +39,14 @@ export default function DashboardPage() {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
       const summary = await api.getDashboardSummary();
       
       // Filter servers based on user role and permissions
+      // IMPORTANT: Use the current user value from the closure
       let filteredServers = summary.servers;
       if (user?.role === 'user' && user?.assignedServers && user.assignedServers.length > 0) {
         // Users can only see their assigned servers
@@ -73,17 +74,20 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
 
   useEffect(() => {
-    fetchDashboardData();
+    // Only fetch data if user is loaded (to ensure proper filtering)
+    if (user && !authLoading) {
+      fetchDashboardData();
+    }
 
     // Auto-refresh every 15 seconds for real-time updates
-    if (autoRefresh) {
+    if (autoRefresh && user && !authLoading) {
       const interval = setInterval(fetchDashboardData, 15000);
       return () => clearInterval(interval);
     }
-  }, [autoRefresh]);
+  }, [autoRefresh, user, authLoading, fetchDashboardData]);
 
   // Show loading while checking authentication
   if (authLoading || !isAuthenticated) {
